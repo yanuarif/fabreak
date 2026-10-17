@@ -34,7 +34,7 @@ Spec: `docs/superpowers/specs/2026-10-17-plan-board-design.md` — read it first
 | `skills/fabreak/board.md` | New "Plan board" section before "CLI fallback". |
 | `.github/workflows/check.yml` | One new step running the unittest. |
 | `README.md`, `CONTRIBUTING.md` | The new command in Entries and Layout; the unittest in the check list. |
-| `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Version `0.3.0`. |
+| `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Version `0.4.0`. |
 
 ---
 
@@ -777,7 +777,7 @@ In `CONTRIBUTING.md`, step 2's code block gains a line after the self-test:
 python3 -m unittest tests/test_plan_board.py
 ```
 
-Set `"version": "0.3.0"` in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
+Set `"version": "0.4.0"` in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
 
 - [x] **Step 4: Verify**
 
