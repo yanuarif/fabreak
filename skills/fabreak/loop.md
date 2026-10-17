@@ -1,15 +1,15 @@
 # Loop C
 
-The same loop for every entry that writes code. It runs inside one task session, in that session's worktree, for one task from the plan. The card for this task is already In progress (board.md).
+It runs inside one task session, in that session's worktree, for one task from the plan. The card for this task is already In progress (board.md).
 
 ## Steps
 
 1. **Worktree** — superpowers:using-git-worktrees. The app created the worktree when the card started; the skill verifies it and runs project setup. Done when `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir` and the branch name is known.
 2. **Implement** — superpowers:subagent-driven-development with the plan path and this task's heading. Without subagents, superpowers:executing-plans. Every implementer follows mattpocock-skills:tdd at the seams the plan names; the model tier is chosen per dispatch. Done when every step of the task is ticked and committed.
 3. **Verify** — superpowers:verification-before-completion. Run the whole suite and any verification hook `CLAUDE.md` names. Print the runner's summary line and the exit code verbatim; that line is the evidence. Done when the exit code is 0.
-4. **Review** — mattpocock-skills:code-review with the fixed point = this branch's merge-base with the default branch, and the Spec source from the card's brief: the plan path plus task heading, the bug report (fix), or "`tests/` unchanged and green" (refactor). docs-only runs the Standards axis only. Both reviewers are fresh subagents. Findings go back to step 2 for one fix round, then step 3 and step 4 again on the changed files. Done when neither axis reports a load-bearing finding.
+4. **Review** — mattpocock-skills:code-review with the fixed point = this branch's merge-base with the default branch, and the Spec source from the card's brief: the plan path plus task heading, the bug report (fix), or "`tests/` unchanged and green" (refactor). Findings go back to step 2 for one fix round, then step 3 and step 4 again on the changed files. Done when neither axis reports a load-bearing finding.
 5. **Finish** — superpowers:finishing-a-development-branch, choosing the PR or MR option; hosting.md gives the command. Card to Review. Done when the PR or MR URL is printed.
-6. **Merge** — CI green (hosting.md), human approval when the repo requires it, merge. Card to Done; the orchestrator ticks the task in the plan (board.md, Done).
+6. **Merge** — CI green (hosting.md), human approval when the repo requires it, merge. Card to Done; the orchestrator ticks the task in the plan (board.md, Done). Lessons: a gotcha this task taught goes into `CLAUDE.md` through mattpocock-skills:writing-for-agents; a technique worth reusing becomes a skill through superpowers:writing-skills.
 
 ## Rules inside the loop
 
@@ -31,4 +31,4 @@ One spec, one plan, cards in several repos, each card naming the cards it depend
 
 ### A question stops the session
 
-Ask one question with answer buttons, move the card to Waiting on me, and end the turn. The owner's answer resumes this session. A guess past a question is a defect, whatever the deadline.
+The rule from SKILL.md, inside a task session: one question with answer buttons, card to Waiting on me, end the turn.

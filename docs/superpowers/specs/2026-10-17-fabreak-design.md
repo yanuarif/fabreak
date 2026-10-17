@@ -163,3 +163,17 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 
 - The board exists only in the Claude Code desktop app; the CLI gets the text fallback.
 - The PR monitor and Auto-fix exist only for GitHub.
+
+## Changes
+
+### 2026-10-17, after the fixture dry runs and the two-axis review
+
+- **Questions.** The one-question rule applies to task sessions. In the orchestrator, an interview skill (grilling, brainstorming) asks its own round or section; fabreak still waits for the owner and never guesses. Reason: grilling asks a whole frontier per round by design.
+- **Hand-offs.** fabreak owns every hand-off between skills: where an invoked skill names its own next skill, the entry's next step replaces it. Reason: brainstorming's terminal rule would otherwise skip domain-modeling.
+- **No remote.** State check 2 runs the suite locally; the first PR or MR stops with one question (which host). The hosting table's "Unknown or no remote" row is split: an unknown host stops at detection, no remote stops at the first PR or MR.
+- **`upgrade` order.** Debugging is not a fixed first step: the loop runs with every target's build as verification, and superpowers:systematic-debugging runs when a build or the suite breaks. The entry reads: research (when the migration guide spans sources) → loop.md → systematic-debugging on failure → wizard.
+- **`refactor` order.** codebase-design first (it names the seam), then the characterization card when tests at that seam are missing, then loop.md. `tests/` in the Spec axis means the repo's test directory, whatever its name.
+- **`bootstrap` pre-commit.** mattpocock-skills:setup-pre-commit is not exposed by the installed plugin, so bootstrap writes the hook itself: husky plus lint-staged with `package.json`, `.githooks/pre-commit` otherwise.
+- **Lessons.** Loop step 6 ends with lessons: a gotcha goes into `CLAUDE.md` through mattpocock-skills:writing-for-agents; a reusable technique becomes a skill through superpowers:writing-skills. This was on the chart and missing from the spec.
+- **`replan`.** A started session for a withdrawn task is archived, not moved to Done; Done means merged.
+- **Forbidden words.** "With and without hyphens" means: the hyphenated whole and each of its parts.

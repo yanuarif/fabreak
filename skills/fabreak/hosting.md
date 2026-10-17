@@ -1,6 +1,6 @@
 # Hosting
 
-Only the PR/MR → CI → merge box depends on the git host. Everything else in fabreak is host-agnostic.
+Only the PR/MR → CI → merge box depends on the git host.
 
 ## Detect
 
@@ -12,7 +12,7 @@ Only the PR/MR → CI → merge box depends on the git host. Everything else in 
 | `gitlab.com`, or a host for which `glab auth status --hostname <host>` succeeds | GitLab | `glab` |
 | `bitbucket.org` | Bitbucket Cloud | REST API 2.0 via `curl`, with `BITBUCKET_USER` and `BITBUCKET_APP_PASSWORD` from the environment |
 | anything else | unknown | stop with one question: which host |
-| no remote | none yet | state check 2 runs the suite locally; the first PR or MR stops with one question: which host, or merge locally |
+| no remote | none yet | state check 2 runs the suite locally; the first PR or MR stops with one question: which host |
 
 A missing or logged-out CLI (`gh auth status`, `glab auth status`) is a human step: mattpocock-skills:wizard, card to Waiting on me.
 

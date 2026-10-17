@@ -18,8 +18,8 @@ A feasibility or design question that only throwaway code answers, inside a time
 
 ## Stop asking when
 
-The question and the time box are written. Inside the box the spike runs without questions; at the box's end it reports what it has.
+The question and the time box are written. Inside the box the spike runs on its own; at the box's end it reports what it has.
 
 ## Done when
 
-The ADR is committed, the branch is archived, and the plan names the ADR. No spike code reaches the default branch.
+The ADR is committed, the branch is archived, and the plan names the ADR.

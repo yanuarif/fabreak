@@ -57,7 +57,7 @@ Flags: `feature --grill` runs a grilling interview before brainstorming; `fix --
 - Reviewers are fresh subagents; the implementer never reviews its own work.
 - Verification evidence is command output: the test runner's summary line and exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through a wizard and park the session.
-- A question stops the session: one question, answer buttons, never a guess.
+- A question stops the session, never a guess: a task session asks one question with answer buttons; an interview (grilling, brainstorming) asks its round.
 - The plan in git is the durable record: tasks are ticked when their PR merges; replans, archived spikes and wrong task splits are recorded there.
 
 ## Layout

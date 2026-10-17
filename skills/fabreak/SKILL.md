@@ -1,6 +1,6 @@
 ---
 name: fabreak
-description: Use when a development request arrives in a repository, when /fabreak is typed with or without an entry name, or when a repo has an open plan or an active task worktree and the next step is unclear. Development work only.
+description: Use when a development request arrives in a repository, or when a repo has an open plan or an active task worktree and the next step is unclear. Development work only.
 argument-hint: "[new|feature|takeover|spike|bootstrap|fix|refactor|upgrade|docs-only|replan|release|closing] [--grill] [--release]"
 ---
 
@@ -30,7 +30,7 @@ Rows are read top-down; the first match wins.
 | CONTEXT.md, no open plan, the request is a bug | fix |
 | CONTEXT.md, no open plan, the request is a change | feature |
 
-Two entries fit: ask one question with both entries as the answers. Choosing silently is a routing bug.
+Two entries fit: ask one question with both entries as the answers.
 
 ## Entries
 
