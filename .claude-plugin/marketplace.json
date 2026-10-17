@@ -5,8 +5,8 @@
   "plugins": [
     {
       "name": "fabreak",
-      "description": "One router skill that runs the Agentic Development Lifecycle by invoking superpowers, mattpocock-skills and frontend-design.",
-      "version": "0.1.0",
+      "description": "Runs the Agentic Development Lifecycle: one command per entry plus a router, invoking superpowers, mattpocock-skills and frontend-design.",
+      "version": "0.2.0",
       "source": "./",
       "author": { "name": "Yanuar Arifin" }
     }

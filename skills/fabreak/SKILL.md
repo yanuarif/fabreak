@@ -1,12 +1,12 @@
 ---
 name: fabreak
 description: Use when a development request arrives in a repository, or when a repo has an open plan or an active task worktree and the next step is unclear. Development work only.
-argument-hint: "[new|feature|takeover|spike|bootstrap|fix|refactor|upgrade|docs-only|replan|release|closing] [--grill] [--release]"
+argument-hint: "[request]"
 ---
 
 # fabreak
 
-fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Three parties: the owner, this orchestrator session, and a fresh subagent per task. Roles are skills; the model tier is picked per dispatch.
+fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Each entry is also its own command, `/fabreak:<entry>`; typed that way, the entry's file names this router as its first step. Three parties: the owner, this orchestrator session, and a fresh subagent per task. Roles are skills; the model tier is picked per dispatch.
 
 ## Read the state
 
@@ -16,15 +16,15 @@ Run these lookups from the repository root, in order, before choosing an entry. 
 2. Test suite: a test script or test config exists; none means "absent". Green: the default branch's CI status when the remote has CI (hosting.md, Commands); with no remote, or no CI run listed for the default branch, run the suite once from the repository root and keep its summary line. The app's worktrees live under `.claude/worktrees/` inside the repository and most runners discover their tests too; exclude that folder in the runner's config (bootstrap adds it).
 3. Open plan: `grep -rl '^- \[ \]' docs/superpowers/plans 2>/dev/null`.
 4. Task worktree: `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, and `git rev-parse --show-superproject-working-tree` prints nothing.
-5. The argument and its flags. `--grill` (feature): grilling before brainstorming. `--release` (fix): the release branch first, then a backport.
+5. The entry, when one was named: by its command `/fabreak:<entry>`, or as the first word of this skill's argument. Flags: `--grill` (feature): grilling before brainstorming. `--release` (fix): the release branch first, then a backport.
 
 Rows are read top-down; the first match wins.
 
 | State | Entry |
 |---|---|
-| Argument given | That entry. Name any open plan in one line first, with its unchecked task count. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
+| Entry named | That entry. Name any open plan in one line first, with its unchecked task count. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
 | Task worktree | loop.md, resuming this worktree's task. |
-| Open plan, no argument | Show the board (board.md), then loop.md on the next unchecked task. A plan whose unchecked tasks already exist in the code is stale: one question, `replan` to tick it or ignore it. |
+| Open plan, no entry named | Show the board (board.md), then loop.md on the next unchecked task. A plan whose unchecked tasks already exist in the code is stale: one question, `replan` to tick it or ignore it. |
 | No CONTEXT.md, no source files | new |
 | No CONTEXT.md, source files present | takeover |
 | CONTEXT.md, no open plan, the request is a bug | fix |
@@ -34,9 +34,9 @@ Two entries fit: ask one question with both entries as the answers.
 
 ## Entries
 
-Read `entries/<name>.md` only after the entry is chosen. fabreak owns every hand-off between skills: where an invoked skill names its own next skill, the entry's next step replaces it.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chosen; its opening paragraph points back here and is already done. fabreak owns every hand-off between skills: where an invoked skill names its own next skill, the entry's next step replaces it.
 
-| Argument | Enter when |
+| Entry | Enter when |
 |---|---|
 | new | an empty or nearly empty repo; a product shaped from scratch |
 | feature | a change to a repo that has CONTEXT.md |

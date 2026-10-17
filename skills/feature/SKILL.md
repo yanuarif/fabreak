@@ -1,4 +1,13 @@
+---
+name: feature
+description: "fabreak entry: a change to a repo that has CONTEXT.md."
+argument-hint: "[--grill] [request]"
+disable-model-invocation: true
+---
+
 # feature
+
+Entry `feature` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `feature` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

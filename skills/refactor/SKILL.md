@@ -1,4 +1,13 @@
+---
+name: refactor
+description: "fabreak entry: structure changes, behaviour stays."
+argument-hint: "[module or request]"
+disable-model-invocation: true
+---
+
 # refactor
+
+Entry `refactor` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `refactor` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

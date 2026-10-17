@@ -1,11 +1,10 @@
 {
   "name": "fabreak",
-  "version": "0.1.0",
-  "description": "One router skill that runs the Agentic Development Lifecycle by invoking superpowers, mattpocock-skills and frontend-design.",
+  "version": "0.2.0",
+  "description": "Runs the Agentic Development Lifecycle: one command per entry plus a router, invoking superpowers, mattpocock-skills and frontend-design.",
   "author": { "name": "Yanuar Arifin" },
   "homepage": "https://github.com/yanuarif/fabreak",
   "repository": "https://github.com/yanuarif/fabreak",
   "license": "MIT",
-  "keywords": ["skills", "workflow", "adlc", "router", "superpowers", "mattpocock"],
-  "skills": ["./skills/fabreak"]
+  "keywords": ["skills", "workflow", "adlc", "router", "superpowers", "mattpocock"]
 }

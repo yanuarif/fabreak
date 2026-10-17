@@ -1,4 +1,13 @@
+---
+name: fix
+description: "fabreak entry: a bug report."
+argument-hint: "[--release] [bug report]"
+disable-model-invocation: true
+---
+
 # fix
+
+Entry `fix` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `fix` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

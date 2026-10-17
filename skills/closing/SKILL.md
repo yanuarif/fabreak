@@ -1,4 +1,13 @@
+---
+name: closing
+description: "fabreak entry: handover to a client: UAT, evidence, access."
+argument-hint: "[request]"
+disable-model-invocation: true
+---
+
 # closing
+
+Entry `closing` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `closing` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

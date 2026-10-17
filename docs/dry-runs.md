@@ -24,7 +24,7 @@ Request: "a todo API for one user: create, complete, list".
 | State | CONTEXT.md absent; no suite; no plan; not a worktree; argument `new` |
 | Entry | `new`; argument and state agree; no routing question |
 | Skills invoked | 1. mattpocock-skills:grilling |
-| Stopped at | `entries/new.md` step 1: grilling's first round of questions (seven, with recommendations) ready for the owner |
+| Stopped at | `skills/new/SKILL.md` step 1: grilling's first round of questions (seven, with recommendations) ready for the owner |
 
 Findings fixed afterwards: the "one question" rule contradicted grilling's rounds (now scoped: task sessions ask one question, the orchestrator asks the skill's round); `--grill` and `--release` were listed in the argument hint and defined nowhere (now in state check 5); the empty-suite case in state check 2 was silent (now "absent").
 
@@ -37,7 +37,7 @@ Request: "invoice totals are off by one cent when a line has a discount: qty 3, 
 | State | CONTEXT.md absent; suite exists, no remote, ran once: `ℹ tests 1 / ℹ pass 1 / ℹ fail 0`, exit 0; no plan; not a worktree; argument `fix` |
 | Entry | `fix`; no routing question |
 | Skills invoked | none before the stop; the card brief named superpowers:systematic-debugging, mattpocock-skills:diagnosing-bugs (conditional), mattpocock-skills:tdd for the card session |
-| Stopped at | `entries/fix.md` step 1: the card brief was assembled; `create_section` and `start_session` were the next actions |
+| Stopped at | `skills/fix/SKILL.md` step 1: the card brief was assembled; `create_section` and `start_session` were the next actions |
 | Reproduction | symptom reproduced (0.27); the expected 0.26 is not what exact cent arithmetic gives, so the session's first question would be where 0.26 comes from |
 
 Findings fixed afterwards: `fix` without CONTEXT.md routed silently (now stated as intended for fix, refactor, upgrade, docs-only); board.md's brief template assumed a plan task (now has a slot for the entry's own brief text); it was unclear who runs fix steps 2 to 5 (now the card session, named in the brief); "stop asking when the bug reproduces" ignored a wrong expected value (now a second case for the one question).
@@ -51,7 +51,7 @@ Request: "add due dates to todos, with an overdue flag in listTodos".
 | State | CONTEXT.md present; suite green by a local run; open plan `2026-10-01-todo-api.md` with Tasks 2 and 3 unchecked; not a worktree; argument `feature` |
 | Entry | `feature`; the argument won over the open plan; no routing question |
 | Skills invoked | 1. superpowers:brainstorming (reads CONTEXT.md first, writes the spec) |
-| Stopped at | `entries/feature.md` step 2, brainstorming checklist item 3: the first clarifying question (calendar date or timestamp, with a recommendation) |
+| Stopped at | `skills/feature/SKILL.md` step 2, brainstorming checklist item 3: the first clarifying question (calendar date or timestamp, with a recommendation) |
 
 Findings fixed afterwards: brainstorming's own terminal rule ("the only skill after brainstorming is writing-plans") would have skipped fabreak's domain-modeling step (now: fabreak owns every hand-off, stated in SKILL.md and in new, feature, replan); `docs/adr/` was assumed to exist (now "when present"); an open plan with an explicit argument was silent (now the router names the open plan in one line first); the routing table's precedence was implicit (now "rows are read top-down; the first match wins").
 
@@ -64,7 +64,7 @@ Request: "we inherited this invoicing module from a contractor; get it under con
 | State | CONTEXT.md absent; suite green by a local run (no remote); no plan; not a worktree; argument `takeover` |
 | Entry | `takeover`; argument and state agree; no routing question |
 | Skills invoked | 1. mattpocock-skills:research with the codebase-map question and the output path |
-| Stopped at | `entries/takeover.md` step 1: the research skill dispatches a background agent that writes `docs/research/`; the brief was ready |
+| Stopped at | `skills/takeover/SKILL.md` step 1: the research skill dispatches a background agent that writes `docs/research/`; the brief was ready |
 
 Findings fixed afterwards: SKILL.md's "no remote: run the suite locally" and hosting.md's "no remote: stop with a question" disagreed (now hosting.md has a "no remote" row: local suite, question only at the first PR or MR); state check 3's glob aborted the whole command in zsh (now `grep -rl ... 2>/dev/null`); the research skill's own output location could disagree with the entry's path (now the entry's path wins); the characterization module-list question lived only under "Stop asking when" (now in step 5); "green on the default branch" with no remote (now "a local run counts").
 

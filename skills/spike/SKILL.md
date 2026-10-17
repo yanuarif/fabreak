@@ -1,4 +1,13 @@
+---
+name: spike
+description: "fabreak entry: a feasibility question that needs throwaway code, time-boxed."
+argument-hint: "[question]"
+disable-model-invocation: true
+---
+
 # spike
+
+Entry `spike` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `spike` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

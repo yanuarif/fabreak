@@ -1,4 +1,13 @@
+---
+name: replan
+description: "fabreak entry: the spec changed while plan tasks remain."
+argument-hint: "[what changed]"
+disable-model-invocation: true
+---
+
 # replan
+
+Entry `replan` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `replan` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

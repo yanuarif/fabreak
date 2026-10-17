@@ -17,7 +17,7 @@ Three small synthetic repos for dry-running fabreak entries. They are plain dire
    cd /tmp/fabreak-dry/<name> && git init -q -b main && git add -A && git commit -q -m "fixture"
    ```
 
-2. Run `/fabreak <entry>` with a one-line request from a session (or a fresh subagent given the `skills/fabreak/` files) in that folder.
+2. Run `/fabreak:<entry>` with a one-line request from a session (or a fresh subagent given the `skills/fabreak/` files) in that folder.
 3. Stop at the first step that would modify the repo. Record the detected state, the skills invoked in order, and the stop point in `docs/dry-runs.md`.
 
 The fixtures themselves stay unchanged.
