@@ -1,0 +1,14 @@
+{
+  "name": "fabreak",
+  "description": "Marketplace for the fabreak plugin",
+  "owner": { "name": "Yanuar Arifin" },
+  "plugins": [
+    {
+      "name": "fabreak",
+      "description": "One router skill that runs the Agentic Development Lifecycle by invoking superpowers, mattpocock-skills and frontend-design.",
+      "version": "0.1.0",
+      "source": "./",
+      "author": { "name": "Yanuar Arifin" }
+    }
+  ]
+}
