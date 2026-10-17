@@ -8,7 +8,7 @@ Three, and only three:
 
 - **Owner** — the human who owns the repo. Does what only a human can do: secrets, deploys, store consoles, branch protection, access. Answers questions.
 - **Orchestrator session** — the Claude Code session where a `/fabreak` command was invoked. Reads state, runs the entry, keeps the board and the plan, proposes task cards.
-- **Fresh subagent per task** — implementer, reviewer, researcher. Roles are skills, not named agents. The model tier is chosen per task when the subagent is dispatched. Reviewers are always fresh; an implementer never reviews its own work.
+- **Task session per card** — the app session a card starts; it implements its one task. Fresh subagents review, research, and may take a mechanical task. Roles are skills, not named agents. The model tier is chosen per dispatch. Reviewers are always fresh; an implementer never reviews its own work.
 
 ## Plugin layout
 
@@ -107,7 +107,7 @@ The board is the Claude Code desktop sidebar. Five sections, created when missin
 The same loop for every entry that writes code. Per task session:
 
 1. superpowers:using-git-worktrees — the app gives each session a worktree; the skill verifies it.
-2. Implementation: superpowers:subagent-driven-development when subagents are available, else superpowers:executing-plans. TDD per task via mattpocock-skills:tdd at agreed seams.
+2. Implementation: the task session implements its task from the plan, TDD via mattpocock-skills:tdd at agreed seams. A mechanical task may go to one implementer subagent on the cheaper tier.
 3. superpowers:verification-before-completion — the runner's summary line printed verbatim, with the exit code.
 4. mattpocock-skills:code-review by fresh subagents, two axes. Spec source = the task's plan path. For `fix`, the bug report. For `refactor`, "`tests/` unchanged and green".
 5. superpowers:finishing-a-development-branch — green suite, then PR or MR via `hosting.md`. Card to Review.
@@ -177,3 +177,7 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 - **Lessons.** Loop step 6 ends with lessons: a gotcha goes into `CLAUDE.md` through mattpocock-skills:writing-for-agents; a reusable technique becomes a skill through superpowers:writing-skills. This was on the chart and missing from the spec.
 - **`replan`.** A started session for a withdrawn task is archived, not moved to Done; Done means merged.
 - **Forbidden words.** "With and without hyphens" means: the hyphenated whole and each of its parts.
+
+### 2026-10-18, after the live card runs
+
+- **Implementer.** The task session implements its task; superpowers:subagent-driven-development and superpowers:executing-plans are no longer named in loop step 2. Reason: across the live card sessions on plan tasks, no session invoked either skill and no session dispatched an implementer subagent; the card session already is the fresh context per task, and the skills' own per-task review repeats loop step 4. A mechanical task may still go to one implementer subagent on the cheaper tier.
