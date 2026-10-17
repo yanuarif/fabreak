@@ -18,7 +18,7 @@ fabreak is a set of Markdown files that route to other plugins' skills. Changes 
    claude plugin validate --strict .
    ```
 
-3. Keep `skills/fabreak/SKILL.md` under 1,500 tokens. Anything an entry needs goes into that entry's file, not the router.
+3. Keep `skills/fabreak/SKILL.md` under 1,500 tokens. Anything an entry needs goes into that entry's `skills/<entry>/SKILL.md`, not the router. An entry file keeps the opening paragraph that points at the router, and `disable-model-invocation: true`: only the owner types `/fabreak:<entry>`; the router reaches an entry by reading its file.
 
 ## Writing rules
 

@@ -1,4 +1,13 @@
+---
+name: upgrade
+description: "fabreak entry: a dependency, runtime or platform version jump."
+argument-hint: "[what to upgrade]"
+disable-model-invocation: true
+---
+
 # upgrade
+
+Entry `upgrade` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `upgrade` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 

@@ -1,8 +1,8 @@
 # fabreak
 
-fabreak is one Claude Code skill that runs the Agentic Development Lifecycle (ADLC). It reads the state of a repository, picks an entry (new product, feature, takeover of legacy code, fix, refactor, release, and so on), and then invokes the right skills from [superpowers](https://github.com/obra/superpowers), [mattpocock-skills](https://github.com/mattpocock/skills) and [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) in a fixed order. It copies nothing from those skills; it routes to them.
+fabreak is a Claude Code plugin that runs the Agentic Development Lifecycle (ADLC): one command per entry (`/fabreak:new`, `/fabreak:fix`, `/fabreak:release`, and so on) and a router, `/fabreak`, that reads the state of a repository and picks the entry. Every entry then invokes the right skills from [superpowers](https://github.com/obra/superpowers), [mattpocock-skills](https://github.com/mattpocock/skills) and [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) in a fixed order. It copies nothing from those skills; it routes to them.
 
-Three parties take part: the repo owner, the orchestrator session where `/fabreak` was typed, and a fresh subagent per task. Roles are skills, not named agents.
+Three parties take part: the repo owner, the orchestrator session where a `/fabreak` command was typed, and a fresh subagent per task. Roles are skills, not named agents.
 
 ![The ADLC as fabreak runs it](docs/adlc.svg)
 
@@ -31,24 +31,24 @@ Every development request starts with /fabreak
 
 ## Entries
 
-`/fabreak` alone reads the repo state and picks an entry, asking one question when two fit. `/fabreak <entry>` goes straight there.
+`/fabreak` (the router, listed as `/fabreak:fabreak`) reads the repo state and picks an entry, asking one question when two fit. `/fabreak:<entry>` goes straight there; the request can follow it on the same line, as in `/fabreak:fix totals are off by one cent`.
 
 | Entry | Enter when |
 |---|---|
-| `new` | an empty or nearly empty repo; a product shaped from scratch |
-| `feature` | a change to a repo that has `CONTEXT.md` |
-| `takeover` | first contact with code that has no domain model |
-| `spike` | a feasibility question that needs throwaway code, time-boxed |
-| `bootstrap` | a repo needs `CLAUDE.md`, CI, pre-commit, branch protection |
-| `fix` | a bug report |
-| `refactor` | structure changes, behaviour stays |
-| `upgrade` | a dependency, runtime or platform version jump |
-| `docs-only` | documentation changes only |
-| `replan` | the spec changed while plan tasks remain |
-| `release` | every plan card is Done and main CI is green |
-| `closing` | handover to a client: UAT, evidence, access |
+| `/fabreak:new` | an empty or nearly empty repo; a product shaped from scratch |
+| `/fabreak:feature` | a change to a repo that has `CONTEXT.md` |
+| `/fabreak:takeover` | first contact with code that has no domain model |
+| `/fabreak:spike` | a feasibility question that needs throwaway code, time-boxed |
+| `/fabreak:bootstrap` | a repo needs `CLAUDE.md`, CI, pre-commit, branch protection |
+| `/fabreak:fix` | a bug report |
+| `/fabreak:refactor` | structure changes, behaviour stays |
+| `/fabreak:upgrade` | a dependency, runtime or platform version jump |
+| `/fabreak:docs-only` | documentation changes only |
+| `/fabreak:replan` | the spec changed while plan tasks remain |
+| `/fabreak:release` | every plan card is Done and main CI is green |
+| `/fabreak:closing` | handover to a client: UAT, evidence, access |
 
-Flags: `feature --grill` runs a grilling interview before brainstorming; `fix --release` lands the fix on the release branch first, then backports it.
+Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming; `/fabreak:fix --release` lands the fix on the release branch first, then backports it.
 
 ## What it enforces
 
@@ -64,7 +64,7 @@ Flags: `feature --grill` runs a grilling interview before brainstorming; `fix --
 
 ```
 skills/fabreak/SKILL.md      the router: state detection, entry table, rules for every entry
-skills/fabreak/entries/      one file per entry, read only when that entry is chosen
+skills/<entry>/SKILL.md      one skill per entry, the /fabreak:<entry> command; read by the router only when that entry is chosen
 skills/fabreak/board.md      the board: sidebar sections, cards, moves, CLI fallback
 skills/fabreak/loop.md       loop C: worktree, implement, verify, review, finish, merge
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection

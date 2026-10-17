@@ -435,3 +435,13 @@ Expected: all exit 0; keep the output for the report.
 git add -A
 git commit -m "Tick the implementation plan"
 ```
+
+---
+
+## Replan 2026-10-17: one command per entry
+
+After the first install the entries showed up as `/fabreak:fabreak <entry>`. The owner wants `/fabreak:<entry>`. Each `skills/fabreak/entries/<entry>.md` became `skills/<entry>/SKILL.md`, a skill of its own with `disable-model-invocation: true`, an opening paragraph that runs the router first, and `$ARGUMENTS` carrying the request and flags. The router stays `skills/fabreak/SKILL.md`, now reading `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` once the entry is chosen; `board.md`, `loop.md` and `hosting.md` stay next to it. The manifest relies on the default `skills/` scan. Version 0.2.0.
+
+- [x] Move the twelve entries, add frontmatter and the router paragraph, fix cross-entry references.
+- [x] Update the router, `board.md`, both manifests, README, CONTRIBUTING, the spec, the dry-run log and the fixture README.
+- [x] `claude plugin validate --strict .`, the word check, the checker self-test, and a `--plugin-dir` run listing the `/fabreak:` commands.

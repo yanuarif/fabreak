@@ -1,4 +1,13 @@
+---
+name: release
+description: "fabreak entry: every plan card is Done and main CI is green."
+argument-hint: "[version]"
+disable-model-invocation: true
+---
+
 # release
+
+Entry `release` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SKILL.md`, runs first: its state read with `release` as the argument, then its rules for every entry. `board.md`, `loop.md` and `hosting.md` are in that folder. Another entry is `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. Request and flags: $ARGUMENTS
 
 ## When
 
@@ -10,7 +19,7 @@ Every card of the plan is Done and the default branch's CI is green (state check
 2. Version and changelog: bump the version where the stack keeps it; a `CHANGELOG.md` entry from the merged PR or MR titles since the last tag. One card, one PR or MR, merged through loop.md steps 5 and 6.
 3. Store, deploy or publish steps: mattpocock-skills:wizard; the owner performs them, and the wizard records what was done in `evidence/<version>/release-notes.md`. Card to Waiting on me.
 4. Tag last: `git tag -a v<version>` on the merged commit, after the wizard reports done.
-5. A hotfix after the tag: `entries/fix.md` with `--release`.
+5. A hotfix after the tag: the `fix` entry with `--release`.
 
 ## Artifacts
 

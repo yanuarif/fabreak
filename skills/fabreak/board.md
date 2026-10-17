@@ -14,7 +14,7 @@ One plan task becomes one card: a session proposal via `start_session` with `ini
 
 1. The task's full text from the plan, pasted verbatim: steps and verification. For an entry without a plan (fix, refactor, upgrade, docs-only): the entry's own brief text, such as the bug report with the seam the regression test goes through (function and test file), the module design, the breaking-change list or the page list.
 2. The spec path and the plan path, when they exist.
-3. The entry and the steps the session runs: "Follow `entries/<name>.md` from step N, then `loop.md`, from the fabreak skill."
+3. The entry and the steps the session runs: "Follow the `<name>` entry, `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`, from step N, then `loop.md` next to the router." The brief carries the substituted absolute paths.
 4. The Spec source for review, as loop.md step 4 defines it for this entry.
 5. The git permissions the owner gave for this card: commit on the branch; push and open the PR or MR; merge. What is not listed stops the session with a question (SKILL.md rule).
 

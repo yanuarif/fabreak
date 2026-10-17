@@ -1,13 +1,13 @@
 # fabreak design
 
-fabreak is a Claude Code plugin with one skill: a router that runs the Agentic Development Lifecycle (ADLC) by invoking skills from three public plugins (superpowers, mattpocock-skills, frontend-design). It reads the state of a repository, picks an entry, and then calls the installed skills in a fixed order. It copies nothing from those skills.
+fabreak is a Claude Code plugin with one skill per entry, each a `/fabreak:<entry>` command, and a router skill that runs the Agentic Development Lifecycle (ADLC) by invoking skills from three public plugins (superpowers, mattpocock-skills, frontend-design). It reads the state of a repository, picks an entry, and then calls the installed skills in a fixed order. It copies nothing from those skills.
 
 ## Parties
 
 Three, and only three:
 
 - **Owner** — the human who owns the repo. Does what only a human can do: secrets, deploys, store consoles, branch protection, access. Answers questions.
-- **Orchestrator session** — the Claude Code session where `/fabreak` was invoked. Reads state, runs the entry, keeps the board and the plan, proposes task cards.
+- **Orchestrator session** — the Claude Code session where a `/fabreak` command was invoked. Reads state, runs the entry, keeps the board and the plan, proposes task cards.
 - **Fresh subagent per task** — implementer, reviewer, researcher. Roles are skills, not named agents. The model tier is chosen per task when the subagent is dispatched. Reviewers are always fresh; an implementer never reviews its own work.
 
 ## Plugin layout
@@ -16,7 +16,7 @@ Three, and only three:
 .claude-plugin/plugin.json          plugin manifest
 .claude-plugin/marketplace.json     the repo is its own marketplace
 skills/fabreak/SKILL.md             router: state detection, argument table, rules for every entry
-skills/fabreak/entries/<arg>.md     one file per entry (12)
+skills/<entry>/SKILL.md             one skill per entry (12): the /fabreak:<entry> command
 skills/fabreak/board.md             sidebar board mechanics and CLI fallback
 skills/fabreak/loop.md              loop C and its rules
 skills/fabreak/hosting.md           hosting detection, PR/MR, CI, branch protection
@@ -33,7 +33,7 @@ README.md, LICENSE, CONTRIBUTING.md
 
 ### SKILL.md is a context pointer
 
-The router stays under 1,500 tokens. It holds only: frontmatter, the state detection order, the argument-to-entry table, the rules that bind every entry, and pointers to `board.md`, `loop.md`, `hosting.md`. Entry files load only when their entry is chosen. The skill is model-invoked (it keeps a `description`) because the per-repo `CLAUDE.md` line "Every development request starts with /fabreak" asks the agent itself to reach it.
+The router stays under 1,500 tokens. It holds only: frontmatter, the state detection order, the argument-to-entry table, the rules that bind every entry, and pointers to `board.md`, `loop.md`, `hosting.md`. Entry files load only when their entry is chosen. The router is model-invoked (it keeps a `description`) because the per-repo `CLAUDE.md` line "Every development request starts with /fabreak" asks the agent itself to reach it. Entry skills carry `disable-model-invocation: true`: the owner types `/fabreak:<entry>`, and the router reads an entry's file; neither path lets the model pick an entry on its own. An entry typed directly opens with a paragraph that runs the router first (state read, rules for every entry), so both paths meet at the same place.
 
 ## State detection
 
@@ -43,15 +43,15 @@ Checked in this order, before any entry runs. Each check is a shell lookup, not 
 2. A test suite exists, and whether it is green: the default branch's CI status via `hosting.md` when a remote exists; otherwise run the suite once and keep its summary line.
 3. A plan under `docs/superpowers/plans/` with unchecked tasks (`- [ ]`).
 4. An active worktree: `git rev-parse --git-dir` differs from `--git-common-dir` (and not a submodule) — this session is a task session.
-5. The argument given to `/fabreak`.
+5. The entry named, by its `/fabreak:<entry>` command or as the router's argument.
 
 Resolution:
 
 | State | Entry |
 |---|---|
-| Argument given | That entry. Detection still informs it (for example `feature` on a repo without `CONTEXT.md` asks whether `takeover` was meant). |
+| Entry named | That entry. Detection still informs it (for example `feature` on a repo without `CONTEXT.md` asks whether `takeover` was meant). |
 | Active worktree | `loop.md`, resuming the task this worktree belongs to. |
-| Open plan, no argument | `loop.md`, next unchecked task; the board is shown first. |
+| Open plan, no entry named | `loop.md`, next unchecked task; the board is shown first. |
 | No `CONTEXT.md`, no source files | `new` |
 | No `CONTEXT.md`, source files present | `takeover` |
 | `CONTEXT.md`, no open plan, request describes a bug | `fix` |
@@ -72,7 +72,7 @@ Written once, in SKILL.md:
 
 ## Entries
 
-Each `entries/<arg>.md` has the same five sections: **When** (enter here if), **Steps** (skills invoked, in order, with the arguments fabreak passes), **Artifacts** (what is produced and where), **Stop asking when**, **Done when**.
+Each `skills/<entry>/SKILL.md` has, after its router paragraph, the same five sections: **When** (enter here if), **Steps** (skills invoked, in order, with the arguments fabreak passes), **Artifacts** (what is produced and where), **Stop asking when**, **Done when**.
 
 | Entry | Lane | Skills, in order | What differs from the full lane |
 |---|---|---|---|
