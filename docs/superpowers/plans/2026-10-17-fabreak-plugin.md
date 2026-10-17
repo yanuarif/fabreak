@@ -61,7 +61,7 @@ Spec: `docs/superpowers/specs/2026-10-17-fabreak-design.md` — read it first; e
 **Interfaces:**
 - Produces: `scripts/check-forbidden-words.sh [--staged | --all | FILE...]`, exit 0 clean, exit 1 with `path:line: forbidden word` lines on stderr. `scripts/forbidden-words-add.sh WORD` appends to the hash file.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```bash
 #!/usr/bin/env bash
@@ -93,12 +93,12 @@ rm -rf "$tmp"
 exit $fail
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `bash tests/forbidden-words.test.sh`
 Expected: every line `FAIL` (script missing, exit 127).
 
-- [ ] **Step 3: Write the checker**
+- [x] **Step 3: Write the checker**
 
 ```bash
 #!/usr/bin/env bash
@@ -146,7 +146,7 @@ done
 exit $status
 ```
 
-- [ ] **Step 4: Write the add helper and seed the hash list**
+- [x] **Step 4: Write the add helper and seed the hash list**
 
 ```bash
 #!/usr/bin/env bash
@@ -161,12 +161,12 @@ sort -u -o "$root/scripts/forbidden-words.sha256" "$root/scripts/forbidden-words
 
 Seed the list by running the helper once with the owner's forbidden names (typed on the command line, never written to a file in the repo). The owner's handle goes in too: it is allowed only inside the install URL, which the checker strips.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `chmod +x scripts/*.sh tests/*.sh && bash tests/forbidden-words.test.sh`
 Expected: six `ok` lines, exit 0.
 
-- [ ] **Step 6: Write the pre-commit hook and CI workflow**
+- [x] **Step 6: Write the pre-commit hook and CI workflow**
 
 ```bash
 #!/usr/bin/env bash
@@ -199,7 +199,7 @@ jobs:
         run: claude plugin validate --strict .
 ```
 
-- [ ] **Step 7: Enable the hook locally and commit**
+- [x] **Step 7: Enable the hook locally and commit**
 
 ```bash
 git config core.hooksPath .githooks
@@ -216,7 +216,7 @@ git commit -m "Add forbidden-word guard, pre-commit hook and CI workflow"
 - Create: `.claude-plugin/marketplace.json`
 - Create: `skills/fabreak/SKILL.md` (placeholder frontmatter only, replaced in Task 3)
 
-- [ ] **Step 1: Write the manifests**
+- [x] **Step 1: Write the manifests**
 
 ```json
 {
@@ -249,12 +249,12 @@ git commit -m "Add forbidden-word guard, pre-commit hook and CI workflow"
 }
 ```
 
-- [ ] **Step 2: Validate**
+- [x] **Step 2: Validate**
 
 Run: `claude plugin validate --strict .`
 Expected: exit 0 (with the placeholder SKILL.md carrying valid `name` and `description`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .claude-plugin skills/fabreak/SKILL.md
@@ -271,7 +271,7 @@ git commit -m "Add plugin and marketplace manifests"
 **Interfaces:**
 - Produces: the names the entries and mechanism files are referenced by: `entries/<arg>.md`, `board.md`, `loop.md`, `hosting.md`; the five board section names; the rule list every entry inherits.
 
-- [ ] **Step 1: Write the router**
+- [x] **Step 1: Write the router**
 
 Frontmatter: `name: fabreak`, `description` that starts with "Use when" and lists trigger branches only (a development request in a repo, a `/fabreak <entry>` call, a repo with an open plan or an active worktree), `argument-hint: "[new|feature|takeover|spike|bootstrap|fix|refactor|upgrade|docs-only|replan|release|closing] [--grill] [--release]"`.
 
@@ -282,11 +282,11 @@ Body sections, in order:
 4. **Rules for every entry** — the six rules from the spec, verbatim in meaning.
 5. **Mechanisms** — three pointers: `board.md` (when a card moves or the board is shown), `loop.md` (when code is written), `hosting.md` (when a PR or MR, CI status or merge is needed).
 
-- [ ] **Step 2: Measure**
+- [x] **Step 2: Measure**
 
 Run: `wc -w skills/fabreak/SKILL.md` and `claude plugin details fabreak` after a local marketplace add is not available, so estimate tokens as words × 1.4 and also count with a tokenizer when one is installed (`python3 -c "import tiktoken"`). Expected: under 1,500 tokens.
 
-- [ ] **Step 3: Validate and commit**
+- [x] **Step 3: Validate and commit**
 
 Run: `claude plugin validate --strict . && bash scripts/check-forbidden-words.sh --all`
 Expected: exit 0.
@@ -309,13 +309,13 @@ git commit -m "Write the fabreak router"
 - Consumes: section names and rules from Task 3.
 - Produces: the section names `Backlog`, `In progress`, `Waiting on me`, `Review`, `Done`; the loop steps numbered 1–6 the entries refer to; the hosting table the loop's step 5 refers to.
 
-- [ ] **Step 1: Write `board.md`** from the spec's Board section. Sections: Sections (create when missing, with the tool names `list_sections`, `create_section`), Cards (one plan task → one `start_session` proposal, brief = task text + spec path + plan path, `own_initiative`, `fresh`), Moves (which event moves a session where, `move_sessions` with `"self"`, the owner's confirmation prompt for other sessions), Done (`mark_completed`, tick the plan, commit the plan), CLI fallback (text board from plan checkboxes and `hosting.md` PR state, with the exact table shape).
+- [x] **Step 1: Write `board.md`** from the spec's Board section. Sections: Sections (create when missing, with the tool names `list_sections`, `create_section`), Cards (one plan task → one `start_session` proposal, brief = task text + spec path + plan path, `own_initiative`, `fresh`), Moves (which event moves a session where, `move_sessions` with `"self"`, the owner's confirmation prompt for other sessions), Done (`mark_completed`, tick the plan, commit the plan), CLI fallback (text board from plan checkboxes and `hosting.md` PR state, with the exact table shape).
 
-- [ ] **Step 2: Write `loop.md`** from the spec's Loop C section. Sections: the six numbered steps with the skill each invokes and the argument fabreak passes (Spec source per entry), then one subsection per rule: Rebase conflict, Human review rejects, Debugging, Cross-repo, A question stops the session. Each ends on a completion criterion.
+- [x] **Step 2: Write `loop.md`** from the spec's Loop C section. Sections: the six numbered steps with the skill each invokes and the argument fabreak passes (Spec source per entry), then one subsection per rule: Rebase conflict, Human review rejects, Debugging, Cross-repo, A question stops the session. Each ends on a completion criterion.
 
-- [ ] **Step 3: Write `hosting.md`** from the spec's Hosting section. Sections: Detect (`git remote get-url origin`, the match for each host), the table (PR/MR create, CI status, merge, branch protection) with the exact commands for `gh` and `glab` and the REST endpoints for Bitbucket, Unknown host (stop with a question), Default-branch CI status (used by state detection and `release`).
+- [x] **Step 3: Write `hosting.md`** from the spec's Hosting section. Sections: Detect (`git remote get-url origin`, the match for each host), the table (PR/MR create, CI status, merge, branch protection) with the exact commands for `gh` and `glab` and the REST endpoints for Bitbucket, Unknown host (stop with a question), Default-branch CI status (used by state detection and `release`).
 
-- [ ] **Step 4: Check and commit**
+- [x] **Step 4: Check and commit**
 
 Run: `bash scripts/check-forbidden-words.sh --all`
 Expected: exit 0.
@@ -335,9 +335,9 @@ git commit -m "Add board, loop and hosting mechanisms"
 **Interfaces:**
 - Consumes: loop step numbers, board section names, hosting table from Task 4.
 
-- [ ] **Step 1: Write each entry** with the same five headings: `## When`, `## Steps`, `## Artifacts`, `## Stop asking when`, `## Done when`. Steps name skills as `plugin:skill` with the argument fabreak passes, in the order from the spec's Entries table. Artifacts list paths: `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, `docs/superpowers/plans/YYYY-MM-DD-<topic>.md`, `CONTEXT.md`, `docs/adr/NNNN-*.md`, `docs/research/*.md`, `evidence/<version>/`, `CLAUDE.md`.
+- [x] **Step 1: Write each entry** with the same five headings: `## When`, `## Steps`, `## Artifacts`, `## Stop asking when`, `## Done when`. Steps name skills as `plugin:skill` with the argument fabreak passes, in the order from the spec's Entries table. Artifacts list paths: `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, `docs/superpowers/plans/YYYY-MM-DD-<topic>.md`, `CONTEXT.md`, `docs/adr/NNNN-*.md`, `docs/research/*.md`, `evidence/<version>/`, `CLAUDE.md`.
 
-- [ ] **Step 2: Check and commit**
+- [x] **Step 2: Check and commit**
 
 Run: `bash scripts/check-forbidden-words.sh --all && claude plugin validate --strict .`
 Expected: exit 0.
@@ -357,14 +357,14 @@ git commit -m "Add the twelve entry files"
 - Create: `tests/fixtures/greenfield-with-plan/{CONTEXT.md,docs/superpowers/specs/2026-10-01-todo-api-design.md,docs/superpowers/plans/2026-10-01-todo-api.md,src/todo.js,test/todo.test.js,package.json}`
 - Create: `tests/fixtures/legacy-no-context/{src/invoice.js,test/invoice.test.js,package.json,README.md}`
 
-- [ ] **Step 1: Write the fixtures.** `greenfield-with-plan`: a todo API with `CONTEXT.md` (three terms), a short spec, a plan with three tasks, two of them unchecked. `legacy-no-context`: a legacy invoicing app with one module and one passing test using `node --test`, no `CONTEXT.md`. `tests/fixtures/README.md`: how a dry run copies a fixture to a scratch folder, runs `git init` and `git add -A && git commit`, and stops before the first modifying step.
+- [x] **Step 1: Write the fixtures.** `greenfield-with-plan`: a todo API with `CONTEXT.md` (three terms), a short spec, a plan with three tasks, two of them unchecked. `legacy-no-context`: a legacy invoicing app with one module and one passing test using `node --test`, no `CONTEXT.md`. `tests/fixtures/README.md`: how a dry run copies a fixture to a scratch folder, runs `git init` and `git add -A && git commit`, and stops before the first modifying step.
 
-- [ ] **Step 2: Verify the legacy suite is green**
+- [x] **Step 2: Verify the legacy suite is green**
 
 Run: `cd tests/fixtures/legacy-no-context && node --test`
 Expected: `ℹ pass 1`, `ℹ fail 0`, exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/fixtures
@@ -378,11 +378,11 @@ git commit -m "Add synthetic fixture repos"
 **Files:**
 - Create: `docs/dry-runs.md`
 
-- [ ] **Step 1: Run four dry runs.** For each of `new` on `new-empty`, `fix` on `legacy-no-context`, `feature` on `greenfield-with-plan`, `takeover` on `legacy-no-context`: copy the fixture to a scratch folder, `git init`, commit, then dispatch a fresh subagent with the fabreak skill files and the instruction to run `/fabreak <entry>` with a one-line request ("add due dates to todos", "totals are off by one cent when a line has a discount") and to stop at the first step that would modify the repo, reporting skills invoked in order and the stop point.
+- [x] **Step 1: Run four dry runs.** For each of `new` on `new-empty`, `fix` on `legacy-no-context`, `feature` on `greenfield-with-plan`, `takeover` on `legacy-no-context`: copy the fixture to a scratch folder, `git init`, commit, then dispatch a fresh subagent with the fabreak skill files and the instruction to run `/fabreak <entry>` with a one-line request ("add due dates to todos", "totals are off by one cent when a line has a discount") and to stop at the first step that would modify the repo, reporting skills invoked in order and the stop point.
 
-- [ ] **Step 2: Record** each run in `docs/dry-runs.md`: entry, fixture, request, state detected, skills invoked in order, where it stopped, any question it asked, and anything the router got wrong (fixed in the skill files before the final commit).
+- [x] **Step 2: Record** each run in `docs/dry-runs.md`: entry, fixture, request, state detected, skills invoked in order, where it stopped, any question it asked, and anything the router got wrong (fixed in the skill files before the final commit).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/dry-runs.md skills
@@ -400,13 +400,13 @@ git commit -m "Record fixture dry runs"
 - Create: `CONTRIBUTING.md`
 - Create: `.gitignore`
 
-- [ ] **Step 1: Draw `docs/adlc.svg`** — a generic redraw of the chart: router on top; lane A (grilling, brainstorming, domain-modeling, writing-plans, bootstrap, with research/prototype/spike on the side); lane B (research, domain-modeling, codebase-design, characterization tdd, grilling → brainstorming, with writing-for-agents and setup on the side); the session-per-task node; loop C band with its five nodes and four rule nodes; PR/MR → CI → merge, release, closing; Waiting on me + wizard, writing-skills + writing-for-agents; the three back edges. English labels, no links, inline styles only.
+- [x] **Step 1: Draw `docs/adlc.svg`** — a generic redraw of the chart: router on top; lane A (grilling, brainstorming, domain-modeling, writing-plans, bootstrap, with research/prototype/spike on the side); lane B (research, domain-modeling, codebase-design, characterization tdd, grilling → brainstorming, with writing-for-agents and setup on the side); the session-per-task node; loop C band with its five nodes and four rule nodes; PR/MR → CI → merge, release, closing; Waiting on me + wizard, writing-skills + writing-for-agents; the three back edges. English labels, no links, inline styles only.
 
-- [ ] **Step 2: Write `README.md`**: what fabreak is (three sentences), the SVG, install (`claude plugin marketplace add https://github.com/yanuarif/fabreak`, `claude plugin install fabreak@fabreak --scope user`), the CLAUDE.md line `Every development request starts with /fabreak`, prerequisites with repo links (superpowers: https://github.com/obra/superpowers, mattpocock-skills: https://github.com/mattpocock/skills, frontend-design: https://github.com/anthropics/claude-plugins-official), the entry table (argument, when), honest limits (board only in the Claude Code desktop app; PR monitor and Auto-fix only on GitHub; Bitbucket through the REST API or manual steps).
+- [x] **Step 2: Write `README.md`**: what fabreak is (three sentences), the SVG, install (`claude plugin marketplace add https://github.com/yanuarif/fabreak`, `claude plugin install fabreak@fabreak --scope user`), the CLAUDE.md line `Every development request starts with /fabreak`, prerequisites with repo links (superpowers: https://github.com/obra/superpowers, mattpocock-skills: https://github.com/mattpocock/skills, frontend-design: https://github.com/anthropics/claude-plugins-official), the entry table (argument, when), honest limits (board only in the Claude Code desktop app; PR monitor and Auto-fix only on GitHub; Bitbucket through the REST API or manual steps).
 
-- [ ] **Step 3: Write `LICENSE`** (MIT, `Copyright (c) 2026 Yanuar Arifin`), `CONTRIBUTING.md` (enable the hook with `git config core.hooksPath .githooks`, run `bash scripts/check-forbidden-words.sh --all` and `claude plugin validate --strict .` before a PR, English only, generic examples, add a word to the guard with `scripts/forbidden-words-add.sh`), `.gitignore` (`.DS_Store`, `node_modules/`, `../fabreak-notes` is outside the repo and needs no entry).
+- [x] **Step 3: Write `LICENSE`** (MIT, `Copyright (c) 2026 Yanuar Arifin`), `CONTRIBUTING.md` (enable the hook with `git config core.hooksPath .githooks`, run `bash scripts/check-forbidden-words.sh --all` and `claude plugin validate --strict .` before a PR, English only, generic examples, add a word to the guard with `scripts/forbidden-words-add.sh`), `.gitignore` (`.DS_Store`, `node_modules/`, `../fabreak-notes` is outside the repo and needs no entry).
 
-- [ ] **Step 4: Check and commit**
+- [x] **Step 4: Check and commit**
 
 Run: `bash scripts/check-forbidden-words.sh --all && claude plugin validate --strict .`
 Expected: exit 0.
@@ -420,16 +420,16 @@ git commit -m "Add README, ADLC chart, license and contributing guide"
 
 ### Task 9: Final verification
 
-- [ ] **Step 1: Fresh review.** Dispatch a fresh reviewer subagent with the spec path and the plugin files; two axes: Standards (writing-for-agents and writing-skills rules) and Spec (every spec section has its file and no file contradicts the spec). Fix findings, re-run the word check.
+- [x] **Step 1: Fresh review.** Dispatch a fresh reviewer subagent with the spec path and the plugin files; two axes: Standards (writing-for-agents and writing-skills rules) and Spec (every spec section has its file and no file contradicts the spec). Fix findings, re-run the word check.
 
-- [ ] **Step 2: Measure `SKILL.md`** with a real tokenizer when available; record the number in the final report.
+- [x] **Step 2: Measure `SKILL.md`** with a real tokenizer when available; record the number in the final report.
 
-- [ ] **Step 3: Run everything once more**
+- [x] **Step 3: Run everything once more**
 
 Run: `bash tests/forbidden-words.test.sh && bash scripts/check-forbidden-words.sh --all && claude plugin validate --strict . && (cd tests/fixtures/legacy-no-context && node --test)`
 Expected: all exit 0; keep the output for the report.
 
-- [ ] **Step 4: Tick this plan's tasks and commit**
+- [x] **Step 4: Tick this plan's tasks and commit**
 
 ```bash
 git add -A
