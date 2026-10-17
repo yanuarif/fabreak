@@ -56,10 +56,12 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 - Plan before code. Exceptions: fix, refactor, upgrade, docs-only.
 - One task = one card = one session = one worktree = one PR or MR.
 - Reviewers are fresh subagents. The implementer never reviews its own work. Model tier per dispatch: reviewers of a diff under about 200 lines and a mechanical task's implementer subagent run on the cheaper tier; design-heavy work runs on the session's own tier.
+- A skill a step names is invoked with the Skill tool when the step starts, even when its commands look obvious. Running the commands by hand does not count as the step.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me.
 - A question stops the session. In a task session: one question with answer buttons. In the orchestrator: the interview round of the skill in use (a grilling round, a brainstorming section). Either way, wait; the owner's answer resumes the same session. A guess past a question is a defect.
-- The durable record is the plan in git: tick a task when its PR merges; record replans, archived spikes and wrong task splits there.
+- The durable record is the plan in git, edited by the orchestrator only: tick a task when its PR merges; record replans, archived spikes and wrong task splits there.
+- Work that belongs to another entry (a release, a fix, a spike) switches to that entry's file; its plan is never written by hand. An entry ends only when its "Done when" holds; an unmet line (a wizard not run, evidence not written) is named to the owner, never skipped.
 
 ## Mechanisms
 

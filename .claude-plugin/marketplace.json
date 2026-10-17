@@ -6,7 +6,7 @@
     {
       "name": "fabreak",
       "description": "Runs the Agentic Development Lifecycle: one command per entry plus a router, invoking superpowers, mattpocock-skills and frontend-design.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "./",
       "author": { "name": "Yanuar Arifin" }
     }
