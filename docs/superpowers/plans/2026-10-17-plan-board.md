@@ -279,7 +279,7 @@ git commit -m "Parse plan files into board tasks"
 - Produces: `main(argv=None) -> int`.
 - Produces: module constant `PAGE: str`, filled in Task 3; for this task it is the placeholder `"<!doctype html><title>plan board</title>"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/test_plan_board.py`, above `if __name__ == "__main__":`:
 
@@ -369,12 +369,12 @@ class Main(unittest.TestCase):
         self.assertIsNone(pb.healthz(free_port))
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `python3 -m unittest tests/test_plan_board.py 2>&1 | tail -3`
 Expected: `FAILED (errors=N)` with `AttributeError: module 'plan_board' has no attribute 'load_board'` and the like, exit code 1.
 
-- [ ] **Step 3: Write the loader, the server and main**
+- [x] **Step 3: Write the loader, the server and main**
 
 Append to `scripts/plan-board.py`:
 
@@ -486,12 +486,12 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `python3 -m unittest tests/test_plan_board.py 2>&1 | tail -3`
 Expected: `Ran 20 tests` … `OK`, exit code 0.
 
-- [ ] **Step 5: Smoke the CLI once**
+- [x] **Step 5: Smoke the CLI once**
 
 Run from the repo root:
 
@@ -501,7 +501,7 @@ python3 scripts/plan-board.py --root tests/fixtures/greenfield-with-plan --port 
 
 Expected: the first process prints `http://127.0.0.1:7899/`; curl prints `{"root": "<abs>/tests/fixtures/greenfield-with-plan"}`; the second invocation prints the same URL and `exit 0` (reuse); the background job is killed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 bash scripts/check-forbidden-words.sh scripts/plan-board.py tests/test_plan_board.py

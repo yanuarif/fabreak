@@ -88,5 +88,90 @@ class PortFor(unittest.TestCase):
         self.assertTrue(7800 <= a <= 7899)
 
 
+class LoadBoard(unittest.TestCase):
+    def test_fixture_root(self):
+        board = pb.load_board(FIXTURE)
+        self.assertEqual(board["plan"], "2026-10-01-todo-api.md")
+        self.assertEqual(board["plans"], ["2026-10-01-todo-api.md"])
+        self.assertEqual(board["errors"], {})
+        self.assertEqual(board["root"], str(FIXTURE.resolve()))
+        self.assertEqual([t["status"] for t in board["tasks"]], ["done", "backlog", "backlog"])
+
+    def test_unknown_plan_falls_back_to_default(self):
+        board = pb.load_board(FIXTURE, "nope.md")
+        self.assertEqual(board["plan"], "2026-10-01-todo-api.md")
+
+    def test_root_without_plans(self):
+        board = pb.load_board(ROOT / "tests" / "fixtures" / "new-empty")
+        self.assertIsNone(board["plan"])
+        self.assertEqual(board["plans"], [])
+        self.assertEqual(board["tasks"], [])
+
+
+class Server(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = pb.make_server(FIXTURE, 0)
+        cls.port = cls.server.server_address[1]
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def get(self, path):
+        with urlopen(f"http://127.0.0.1:{self.port}{path}", timeout=2) as r:
+            return r.status, r.headers.get("Content-Type", ""), r.read()
+
+    def test_api_board(self):
+        status, ctype, body = self.get("/api/board")
+        self.assertEqual(status, 200)
+        self.assertTrue(ctype.startswith("application/json"))
+        board = json.loads(body)
+        self.assertEqual(board["plan"], "2026-10-01-todo-api.md")
+        self.assertEqual([t["status"] for t in board["tasks"]], ["done", "backlog", "backlog"])
+
+    def test_api_board_with_plan_query(self):
+        _, _, body = self.get("/api/board?plan=2026-10-01-todo-api.md")
+        self.assertEqual(json.loads(body)["plan"], "2026-10-01-todo-api.md")
+
+    def test_healthz(self):
+        status, _, body = self.get("/healthz")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), {"root": str(FIXTURE.resolve())})
+        self.assertEqual(pb.healthz(self.port), str(FIXTURE.resolve()))
+
+    def test_page(self):
+        status, ctype, body = self.get("/")
+        self.assertEqual(status, 200)
+        self.assertTrue(ctype.startswith("text/html"))
+        self.assertIn(b"<!doctype html>", body.lower())
+
+    def test_not_found(self):
+        from urllib.error import HTTPError
+        with self.assertRaises(HTTPError) as cm:
+            self.get("/nothing")
+        self.assertEqual(cm.exception.code, 404)
+
+
+class Main(unittest.TestCase):
+    def test_bad_root(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with redirect_stderr(err):
+            code = pb.main(["--root", str(ROOT / "does-not-exist")])
+        self.assertEqual(code, 2)
+        self.assertIn("root is not a directory", err.getvalue())
+
+    def test_healthz_without_server_is_none(self):
+        probe = pb.make_server(FIXTURE, 0)
+        free_port = probe.server_address[1]
+        probe.server_close()
+        self.assertIsNone(pb.healthz(free_port))
+
+
 if __name__ == "__main__":
     unittest.main()
