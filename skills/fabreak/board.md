@@ -55,6 +55,10 @@ When a PR or MR merges:
 2. The orchestrator, on the report (or when the app continues it because its cards are idle), when the card came from a plan: `git pull --ff-only` on the default branch, tick the task (`- [x]`) and commit the plan: "Tick <task title>". For an entry without a plan the merged PR or MR is the record.
 3. The orchestrator wakes held cards (Held cards): in plan order, every held card whose dependencies are all ticked, while fewer than three cards run. Done when every task is ticked or has a running or held card.
 
+## Plan board
+
+In the desktop app, "Show the board" also opens the plan board: a read-only page of the plan's tasks in Backlog, In progress and Done, derived from each task's ticked steps alone. Run the steps of the `board` command, `${CLAUDE_PLUGIN_ROOT}/skills/board/SKILL.md`. The sidebar sections above stay the live view of sessions; the plan board reaches Done when a task's last step is ticked, before the merge. Done when the pane shows the board.
+
 ## CLI fallback
 
 Without the sidebar tools (plain `claude` in a terminal), print the board as text from the plan, `git worktree list`, and hosting.md:

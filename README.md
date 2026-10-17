@@ -47,6 +47,7 @@ Every development request starts with /fabreak
 | `/fabreak:replan` | the spec changed while plan tasks remain |
 | `/fabreak:release` | every plan card is Done and main CI is green |
 | `/fabreak:closing` | handover to a client: UAT, evidence, access |
+| `/fabreak:board` | open the read-only plan board in the preview pane |
 
 Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming; `/fabreak:fix --release` lands the fix on the release branch first, then backports it.
 
@@ -68,11 +69,13 @@ skills/<entry>/SKILL.md      one skill per entry, the /fabreak:<entry> command; 
 skills/fabreak/board.md      the board: sidebar sections, cards, moves, CLI fallback
 skills/fabreak/loop.md       loop C: worktree, implement, verify, review, finish, merge
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection
+skills/board/SKILL.md        the /fabreak:board command: starts the plan board and opens it in the preview pane
+scripts/plan-board.py        the plan board server: one page from docs/superpowers/plans, read-only, 127.0.0.1
 ```
 
 ## Limits
 
-- The board (Backlog, In progress, Waiting on me, Review, Done) lives in the Claude Code desktop sidebar. Every plan task is a card from the moment the plan is committed; at most three run at once, the rest wait as held cards until a merge wakes them. The sidebar moves a session family together, so the column shows the card that moved last; per-card state is on the card's row and in the plan. In the terminal CLI, fabreak prints the board as text from the plan instead.
+- The board (Backlog, In progress, Waiting on me, Review, Done) lives in the Claude Code desktop sidebar. Every plan task is a card from the moment the plan is committed; at most three run at once, the rest wait as held cards until a merge wakes them. The sidebar moves a session family together, so the column shows the card that moved last; per-card state is on the card's row and in the plan. `/fabreak:board` adds a read-only page of the plan's tasks in the preview pane. In the terminal CLI, fabreak prints the board as text from the plan instead.
 - The PR monitor that wakes a session on review comments, and Auto-fix, exist only for GitHub. On GitLab the session uses `glab`; on Bitbucket it uses the REST API or prints manual steps, and checks CI status itself.
 - fabreak is for development work. Business development, hypothesis research and project-specific tooling are out of scope; a repo may name its own verification hook in `CLAUDE.md`, and fabreak calls it when it exists.
 
