@@ -362,7 +362,7 @@ git commit -m "Add the twelve entry files"
 - [ ] **Step 2: Verify the legacy suite is green**
 
 Run: `cd tests/fixtures/legacy-no-context && node --test`
-Expected: `# pass 1`, `# fail 0`, exit 0.
+Expected: `ℹ pass 1`, `ℹ fail 0`, exit 0.
 
 - [ ] **Step 3: Commit**
 
