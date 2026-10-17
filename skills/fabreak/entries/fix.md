@@ -6,7 +6,7 @@ A bug report, in a repo with or without an open plan. Code before a plan is allo
 
 ## Steps
 
-1. Write the bug report as the card brief (board.md): symptom, expected behaviour, steps, environment, the error text verbatim. One card, one worktree; `--release` cuts the worktree from the release branch.
+1. Write the bug report as the card brief (board.md): symptom, expected behaviour, steps, environment, the error text verbatim. One card, one worktree; `--release` cuts the worktree from the release branch. The brief names steps 2 to 5 as the card session's work; the orchestrator stops after proposing the card.
 2. superpowers:systematic-debugging: reproduce, then root cause. When no tight pass/fail signal exists, mattpocock-skills:diagnosing-bugs builds one first (a test, a curl script, a CLI diff).
 3. mattpocock-skills:tdd: a failing test at the seam that reaches the bug, red before any fix. The runner's summary line showing that failure is printed.
 4. loop.md from step 2 (implement the fix) through step 6, with Spec source = the bug report.
@@ -18,7 +18,7 @@ The regression test, the fix, the PR or MR naming the root cause.
 
 ## Stop asking when
 
-The bug reproduces. When the report's steps do not reproduce it, that is the one question: what differs in the owner's environment.
+The bug reproduces. Two cases earn the one question: the report's steps do not reproduce it (what differs in the owner's environment), or the code's arithmetic and the report's expected value disagree (where the expected value comes from).
 
 ## Done when
 

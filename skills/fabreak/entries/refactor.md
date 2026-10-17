@@ -7,7 +7,7 @@ Structure changes, behaviour stays. Code before a plan is allowed; the spec is "
 ## Steps
 
 1. State check 2: the module has tests that pass. Without them, a characterization card first (takeover.md step 5, scoped to this module), merged before the refactor starts.
-2. mattpocock-skills:codebase-design: name the module, its interface, the seam, and the deepening the refactor achieves. That text is the card brief (board.md).
+2. mattpocock-skills:codebase-design: name the module, its interface, the seam, and the deepening the refactor achieves. That text is the card brief (board.md); the brief names steps 3 and 4 as the card session's work.
 3. loop.md with Spec source = "`tests/` unchanged and green". The implementer touches nothing under the test directory. The Spec axis of mattpocock-skills:code-review checks that `git diff <merge-base> --stat -- tests/` is empty and the suite is green.
 4. The PR or MR description names the module's new interface.
 

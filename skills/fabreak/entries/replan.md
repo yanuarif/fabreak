@@ -6,7 +6,7 @@ The spec changed while plan tasks remain: a decision reversed, a scope cut, a sp
 
 ## Steps
 
-1. superpowers:brainstorming on the change only. The existing spec is updated in place, with a dated "Changes" section at the end naming what changed and why.
+1. superpowers:brainstorming on the change only. The existing spec is updated in place, with a dated "Changes" section at the end naming what changed and why. Its own "invoke writing-plans" step is replaced by step 2 here.
 2. superpowers:writing-plans: the remaining unchecked tasks are rewritten in the existing plan; ticked tasks stay. A "Replan <date>" section lists each withdrawn task and its replacement.
 3. Board: unstarted proposals for withdrawn tasks are dismissed (`dismiss_task`); a started session for a withdrawn task is stopped with a one-line note and moved to Done. New cards are proposed (board.md).
 4. Commit the spec and the plan on the default branch.

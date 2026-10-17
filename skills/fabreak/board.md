@@ -12,9 +12,9 @@ Before the first card: `list_sections`, then `create_section` for each name that
 
 One plan task becomes one card: a session proposal via `start_session` with `initiation: "own_initiative"`, `context: "fresh"`, `use_worktree: true`, `title` = the task's title from the plan. The brief (`prompt`) carries, in this order:
 
-1. The task's full text from the plan, pasted verbatim: steps and verification.
-2. The spec path and the plan path.
-3. The entry this task belongs to, and "Run `loop.md` from the fabreak skill for this task."
+1. The task's full text from the plan, pasted verbatim: steps and verification. For an entry without a plan (fix, refactor, upgrade, docs-only): the entry's own brief text, such as the bug report, the module design, the breaking-change list or the page list.
+2. The spec path and the plan path, when they exist.
+3. The entry and the steps the session runs: "Follow `entries/<name>.md` from step N, then `loop.md`, from the fabreak skill."
 4. The Spec source for review: the plan path plus task heading (feature), the bug report (fix), or "`tests/` unchanged and green" (refactor).
 
 `background` carries the project in two or three sentences and the rules for every entry from SKILL.md.

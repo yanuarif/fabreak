@@ -13,14 +13,16 @@ fabreak routes a development request to one ADLC entry, then runs that entry by 
 Run these lookups in order before choosing an entry. Keep the results; entries reuse them.
 
 1. Domain model: `test -f CONTEXT.md`.
-2. Test suite: a test script or test config exists. Green means the default branch's CI passes (hosting.md); with no remote, run the suite once and keep its summary line.
-3. Open plan: `grep -l '^- \[ \]' docs/superpowers/plans/*.md`.
+2. Test suite: a test script or test config exists; none means "absent". Green: with a remote, the default branch's CI status (hosting.md, Commands); without one, run the suite once and keep its summary line.
+3. Open plan: `grep -rl '^- \[ \]' docs/superpowers/plans 2>/dev/null`.
 4. Task worktree: `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, and `git rev-parse --show-superproject-working-tree` prints nothing.
-5. The argument.
+5. The argument and its flags. `--grill` (feature): grilling before brainstorming. `--release` (fix): the release branch first, then a backport.
+
+Rows are read top-down; the first match wins.
 
 | State | Entry |
 |---|---|
-| Argument given | That entry. State still informs it: `feature` without CONTEXT.md asks whether `takeover` was meant. |
+| Argument given | That entry. Name any open plan in one line first. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
 | Task worktree | loop.md, resuming this worktree's task. |
 | Open plan, no argument | Show the board (board.md), then loop.md on the next unchecked task. |
 | No CONTEXT.md, no source files | new |
@@ -32,7 +34,7 @@ Two entries fit: ask one question with both entries as the answers. Choosing sil
 
 ## Entries
 
-Read `entries/<name>.md` only after the entry is chosen.
+Read `entries/<name>.md` only after the entry is chosen. fabreak owns every hand-off between skills: where an invoked skill names its own next skill, the entry's next step replaces it.
 
 | Argument | Enter when |
 |---|---|
@@ -56,7 +58,7 @@ Read `entries/<name>.md` only after the entry is chosen.
 - Reviewers are fresh subagents. The implementer never reviews its own work.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me.
-- A question stops the session: one question, answer buttons, then wait. The owner's answer resumes the same session.
+- A question stops the session. In a task session: one question with answer buttons. In the orchestrator: the interview round of the skill in use (a grilling round, a brainstorming section). Either way, wait; the owner's answer resumes the same session. A guess past a question is a defect.
 - The durable record is the plan in git: tick a task when its PR merges; record replans, archived spikes and wrong task splits there.
 
 ## Mechanisms
