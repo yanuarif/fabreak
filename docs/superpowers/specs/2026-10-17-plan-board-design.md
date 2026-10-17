@@ -62,6 +62,7 @@ JSON shape:
   "root": "/abs/path",
   "plan": "2026-10-01-todo-api.md",
   "plans": ["2026-10-01-todo-api.md"],
+  "errors": {},
   "title": "Todo API Implementation Plan",
   "goal": "The todo API from the spec, test-first.",
   "tasks": [
@@ -102,7 +103,7 @@ The router's "Show the board (board.md)" row keeps pointing at `board.md`. `boar
 |---|---|
 | `--root` is not a directory | stderr `root is not a directory: <path>`, exit 2 |
 | plan folder missing or empty | serves normally; the page shows the one-line notice |
-| a plan file fails to decode as UTF-8 | that file is skipped and listed in `plans` with a `"error"` field; the others serve |
+| a plan file fails to decode as UTF-8 | that file stays in `plans`, its reason lands in `errors` (`{"<name>": "not UTF-8"}`), and the page lists it under the columns; the others serve |
 | a task heading without steps | status Backlog, `steps: []` |
 | `python3` missing | the command reports it in one line and prints the CLI fallback |
 
