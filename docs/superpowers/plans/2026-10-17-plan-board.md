@@ -51,7 +51,7 @@ Spec: `docs/superpowers/specs/2026-10-17-plan-board-design.md` — read it first
 - Produces: `port_for(root) -> int` in `7800..7899`.
 - Produces: `PLAN_DIR = Path("docs") / "superpowers" / "plans"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_plan_board.py`:
 
@@ -96,7 +96,7 @@ class ParsePlan(unittest.TestCase):
         self.assertEqual(board["tasks"][2]["status"], "backlog")
 
     def test_in_progress_and_uppercase_tick(self):
-        text = "# P\n\n### Task 1: Half\n\n- [X] **Step 1: done**\n- [ ] **Step 2: open**\n"
+        text = "# P\n\n### Task 1: Half\n\n- [X] **Step 1: done**\n- [x] **Step 2: open**\n"
         task = pb.parse_plan(text)["tasks"][0]
         self.assertEqual(task["status"], "in_progress")
         self.assertEqual([s["done"] for s in task["steps"]], [True, False])
@@ -150,12 +150,12 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `python3 -m unittest tests/test_plan_board.py 2>&1 | tail -3`
 Expected: an error from `spec_from_file_location` or `exec_module` because `scripts/plan-board.py` does not exist (`FileNotFoundError` or `AttributeError`), exit code 1.
 
-- [ ] **Step 3: Write the pure functions**
+- [x] **Step 3: Write the pure functions**
 
 Create `scripts/plan-board.py`:
 
@@ -249,12 +249,12 @@ def pick_plan(candidates):
     return ordered[0][0]
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `python3 -m unittest tests/test_plan_board.py 2>&1 | tail -3`
 Expected: `Ran 10 tests` … `OK`, exit code 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 bash scripts/check-forbidden-words.sh scripts/plan-board.py tests/test_plan_board.py
