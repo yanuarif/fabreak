@@ -20,7 +20,7 @@ Spec: `docs/superpowers/specs/2026-10-17-plan-board-design.md` — read it first
 - Default port: `7800 + (crc32(absolute root path) % 100)`.
 - `skills/fabreak/SKILL.md` stays under 1,500 tokens; the router gains no new text beyond what `board.md` already covers.
 - Commits land on this branch with plain messages. Nothing is pushed; the owner opens the PR from the app.
-- Version `0.3.0` in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
+- Version `0.4.0` in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
 
 ---
 

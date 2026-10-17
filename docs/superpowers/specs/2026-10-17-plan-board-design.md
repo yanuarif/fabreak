@@ -125,4 +125,4 @@ Review and Waiting on me columns, drag and drop, ticking from the page, authenti
 
 ## Versioning
 
-`plugin.json` and `marketplace.json` go to `0.3.0`. README: a `/fabreak:board` row in the Entries table and a line for `scripts/plan-board.py` and `skills/board/SKILL.md` in Layout. CONTRIBUTING's check list gains the unittest command.
+`plugin.json` and `marketplace.json` go to `0.4.0` (main had already reached `0.3.0`). README: a `/fabreak:board` row in the Entries table and a line for `scripts/plan-board.py` and `skills/board/SKILL.md` in Layout. CONTRIBUTING's check list gains the unittest command.
