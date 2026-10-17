@@ -17,6 +17,7 @@ One plan task becomes one card: a session proposal via `start_session` with `ini
 3. The entry and the steps the session runs: "Follow the `<name>` entry, `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`, from step N, then `loop.md` next to the router." The brief carries the substituted absolute paths.
 4. The Spec source for review, as loop.md step 4 defines it for this entry.
 5. The git permissions the owner gave for this card: commit on the branch; push and open the PR or MR; merge. What is not listed stops the session with a question (SKILL.md rule).
+6. The board moves this session makes (Moves, below): `move_sessions` with `session_ids: [<root>, "self"]` to In progress at the start, Waiting on me at a question, Review when the PR or MR opens, Done after the merge. The brief names the root id when the orchestrator knows it; otherwise the card's first `["self"]` refusal names it.
 
 `background` carries the project in two or three sentences and the rules for every entry from SKILL.md.
 
