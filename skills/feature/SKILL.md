@@ -19,7 +19,7 @@ A change to a repo that has `CONTEXT.md` and no open plan for this change.
 2. superpowers:brainstorming, narrowed to this feature. It reads `CONTEXT.md` and `docs/adr/` (when present) first so the design uses the project's terms, and writes `docs/superpowers/specs/<date>-<feature>-design.md`, committed by brainstorming itself; fabreak's step 3 follows.
 3. mattpocock-skills:domain-modeling: new terms into `CONTEXT.md`, decisions into `docs/adr/`. A spec that introduces no term and no decision skips this step.
 4. superpowers:writing-plans: `docs/superpowers/plans/<date>-<feature>.md`.
-5. board.md: one card per unblocked task.
+5. board.md: the card round, then one card per task.
 
 ## Artifacts
 
@@ -31,4 +31,4 @@ The spec's last section is approved.
 
 ## Done when
 
-The plan is committed on the default branch and the first cards are proposed. Code waits for a card.
+The plan is committed on the default branch and every task has a card. Code is written only by a card in run state.

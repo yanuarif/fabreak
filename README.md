@@ -57,7 +57,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Reviewers are fresh subagents; the implementer never reviews its own work.
 - Verification evidence is command output: the test runner's summary line and exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through a wizard and park the session.
-- A question stops the session, never a guess: a task session asks one question with answer buttons; an interview (grilling, brainstorming) asks its round.
+- A question stops the session, never a guess: the message spells out the question and every option, and the buttons below repeat it; an interview (grilling, brainstorming) asks its round in the same form.
 - The plan in git is the durable record: tasks are ticked when their PR merges; replans, archived spikes and wrong task splits are recorded there.
 
 ## Layout
@@ -72,7 +72,7 @@ skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, mer
 
 ## Limits
 
-- The board (Backlog, In progress, Waiting on me, Review, Done) lives in the Claude Code desktop sidebar. In the terminal CLI, fabreak prints the board as text from the plan instead.
+- The board (Backlog, In progress, Waiting on me, Review, Done) lives in the Claude Code desktop sidebar. Every plan task is a card from the moment the plan is committed; at most three run at once, the rest wait as held cards until a merge wakes them. The sidebar moves a session family together, so the column shows the card that moved last; per-card state is on the card's row and in the plan. In the terminal CLI, fabreak prints the board as text from the plan instead.
 - The PR monitor that wakes a session on review comments, and Auto-fix, exist only for GitHub. On GitLab the session uses `glab`; on Bitbucket it uses the REST API or prints manual steps, and checks CI status itself.
 - fabreak is for development work. Business development, hypothesis research and project-specific tooling are out of scope; a repo may name its own verification hook in `CLAUDE.md`, and fabreak calls it when it exists.
 
