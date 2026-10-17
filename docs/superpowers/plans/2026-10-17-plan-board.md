@@ -521,7 +521,7 @@ git commit -m "Serve the plan board on 127.0.0.1"
 - Consumes: `/api/board?plan=` JSON from Task 2.
 - Produces: `PAGE` as the full page: header, plan dropdown, three columns, cards, 3-second polling, light and dark colours, the empty-state line.
 
-- [ ] **Step 1: Extend the failing test**
+- [x] **Step 1: Extend the failing test**
 
 In `tests/test_plan_board.py`, replace the body of `Server.test_page` with:
 
@@ -538,12 +538,12 @@ In `tests/test_plan_board.py`, replace the body of `Server.test_page` with:
         self.assertIn("no plan found under docs/superpowers/plans", html)
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `python3 -m unittest tests.test_plan_board.Server.test_page 2>&1 | tail -3`
 Expected: `FAILED (failures=1)`, `'Backlog' not found`, exit code 1.
 
-- [ ] **Step 3: Write the page**
+- [x] **Step 3: Write the page**
 
 In `scripts/plan-board.py`, replace the line `PAGE = "<!doctype html><title>plan board</title>"` with:
 
@@ -672,16 +672,16 @@ PAGE = """<!doctype html>
 """
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `python3 -m unittest tests/test_plan_board.py 2>&1 | tail -3`
 Expected: `Ran 20 tests` … `OK`, exit code 0.
 
-- [ ] **Step 5: Look at it once in the preview pane**
+- [x] **Step 5: Look at it once in the preview pane**
 
 Run from the repo root: `python3 scripts/plan-board.py --root tests/fixtures/greenfield-with-plan --port 7898` in the background, then `navigate` (or `preview_start`) to `http://127.0.0.1:7898/`, one screenshot. Expected: header "greenfield-with-plan / Todo API Implementation Plan", the goal line, Backlog with Task 2 and Task 3, In progress empty, Done with Task 1 and three struck-through steps. Then kill the server.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 bash scripts/check-forbidden-words.sh scripts/plan-board.py tests/test_plan_board.py

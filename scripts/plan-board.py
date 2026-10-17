@@ -115,7 +115,128 @@ def load_board(root, name=None):
     return board
 
 
-PAGE = "<!doctype html><title>plan board</title>"
+PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan board</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e3e1dc;
+    --backlog: #8a8f98; --progress: #d98b1f; --done: #3a9d5d; --tick: #3a9d5d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1d; --ink: #ecebe7; --muted: #9c9a94; --line: #2e2e2b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+           padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+  header .repo { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  header .goal { flex-basis: 100%; color: var(--muted); margin: 0; }
+  header select { margin-left: auto; font: inherit; background: var(--panel); color: var(--ink);
+                  border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
+  main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 12px 16px 24px; }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr; } }
+  .col h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+            margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .col h2::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dot); }
+  .col h2 .count { margin-left: auto; font-weight: 400; }
+  .col-backlog { --dot: var(--backlog); } .col-in_progress { --dot: var(--progress); } .col-done { --dot: var(--done); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .card .num { font-size: 11px; color: var(--muted); }
+  .card .title { font-weight: 600; margin: 1px 0 4px; }
+  .card .tally { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .card ul { list-style: none; margin: 0; padding: 0; }
+  .card li { display: flex; gap: 6px; font-size: 12.5px; color: var(--muted); padding: 1px 0; }
+  .card li.done { text-decoration: line-through; }
+  .card li .box { flex: none; width: 12px; height: 12px; margin-top: 3px; border: 1px solid var(--muted);
+                  border-radius: 3px; }
+  .card li.done .box { background: var(--tick); border-color: var(--tick); }
+  .empty { grid-column: 1 / -1; color: var(--muted); padding: 24px 0; text-align: center; }
+  .errors { grid-column: 1 / -1; color: var(--progress); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="repo" id="repo"></span>
+  <h1 id="title"></h1>
+  <select id="plans" hidden></select>
+  <p class="goal" id="goal"></p>
+</header>
+<main id="board"></main>
+<script>
+(function () {
+  const COLUMNS = [["backlog", "Backlog"], ["in_progress", "In progress"], ["done", "Done"]];
+  const EMPTY = "no plan found under docs/superpowers/plans";
+  const planParam = new URLSearchParams(location.search).get("plan");
+  let last = "";
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function render(board) {
+    document.getElementById("repo").textContent = board.root.split("/").pop();
+    document.getElementById("title").textContent = board.title || board.plan || "";
+    document.getElementById("goal").textContent = board.goal || "";
+    document.title = (board.title ? board.title + " · " : "") + "Plan board";
+
+    const select = document.getElementById("plans");
+    select.hidden = board.plans.length < 2;
+    select.replaceChildren(...board.plans.map(function (name) {
+      const o = el("option", "", name); o.value = name; o.selected = name === board.plan; return o;
+    }));
+
+    const main = document.getElementById("board");
+    main.replaceChildren();
+    if (!board.plan) { main.appendChild(el("p", "empty", EMPTY)); return; }
+    COLUMNS.forEach(function (c) {
+      const tasks = board.tasks.filter(function (t) { return t.status === c[0]; });
+      const col = el("section", "col col-" + c[0]);
+      const h = el("h2", "", c[1]); h.appendChild(el("span", "count", String(tasks.length))); col.appendChild(h);
+      tasks.forEach(function (t) {
+        const card = el("article", "card");
+        card.appendChild(el("div", "num", "Task " + t.number));
+        card.appendChild(el("div", "title", t.title));
+        const done = t.steps.filter(function (s) { return s.done; }).length;
+        card.appendChild(el("div", "tally", done + "/" + t.steps.length + " steps"));
+        const ul = el("ul");
+        t.steps.forEach(function (s) {
+          const li = el("li", s.done ? "done" : ""); li.appendChild(el("span", "box")); li.appendChild(el("span", "", s.text)); ul.appendChild(li);
+        });
+        card.appendChild(ul); col.appendChild(card);
+      });
+      main.appendChild(col);
+    });
+    const broken = Object.keys(board.errors || {});
+    if (broken.length) main.appendChild(el("p", "errors", "skipped (" + board.errors[broken[0]] + "): " + broken.join(", ")));
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch("/api/board" + (planParam ? "?plan=" + encodeURIComponent(planParam) : ""), { cache: "no-store" });
+      const text = await r.text();
+      if (text !== last) { last = text; render(JSON.parse(text)); }
+    } catch (e) { /* server restarting; try again on the next tick */ }
+  }
+
+  document.getElementById("plans").addEventListener("change", function (e) {
+    location.search = "?plan=" + encodeURIComponent(e.target.value);
+  });
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
+</body>
+</html>
+"""
 
 
 def make_server(root, port, verbose=False):

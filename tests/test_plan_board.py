@@ -147,7 +147,12 @@ class Server(unittest.TestCase):
         status, ctype, body = self.get("/")
         self.assertEqual(status, 200)
         self.assertTrue(ctype.startswith("text/html"))
-        self.assertIn(b"<!doctype html>", body.lower())
+        html = body.decode("utf-8")
+        self.assertIn("<!doctype html>", html.lower())
+        for heading in ("Backlog", "In progress", "Done"):
+            self.assertIn(heading, html)
+        self.assertIn("/api/board", html)
+        self.assertIn("no plan found under docs/superpowers/plans", html)
 
     def test_not_found(self):
         from urllib.error import HTTPError
