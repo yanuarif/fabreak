@@ -68,6 +68,20 @@ Request: "we inherited this invoicing module from a contractor; get it under con
 
 Findings fixed afterwards: SKILL.md's "no remote: run the suite locally" and hosting.md's "no remote: stop with a question" disagreed (now hosting.md has a "no remote" row: local suite, question only at the first PR or MR); state check 3's glob aborted the whole command in zsh (now `grep -rl ... 2>/dev/null`); the research skill's own output location could disagree with the entry's path (now the entry's path wins); the characterization module-list question lived only under "Stop asking when" (now in step 5); "green on the default branch" with no remote (now "a local run counts").
 
+## Live run: `fix` on a private repository
+
+Date: 2026-10-17. The orchestrator was a Claude Code desktop session; the repo a small TypeScript MCP server on GitHub with a vitest suite (99 tests), no CI workflow, origin/HEAD unset, and a stale plan (49 unchecked steps, all shipped). Request: three CLI validation errors named only the env var while a fourth named `ENV / --flag`. The card ran in an app-made worktree; the owner started it from the proposal card, merged the PR and answered four questions in all.
+
+| | |
+|---|---|
+| State | CONTEXT.md absent; suite green by a local run (`gh run list` printed nothing); open plan named with its count; not a worktree; argument `fix` |
+| Board | five sections created; the card could not move as `"self"` (nested under the family root) and moved with the root instead; the first start stopped at a Trust repository prompt |
+| Card | systematic-debugging reproduced; tdd ran three red-green slices (the fix was green before loop.md step 2); verify printed `Tests 102 passed (102)`, exit 0; two fresh reviewers, no load-bearing finding; `gh pr create` with `--title`/`--body-file`; `gh pr checks` exited 1 with "no checks reported" |
+| Merge | owner answered in both sessions; the card merged (squash, remote branch deleted) and the orchestrator's merge got "Merge already in progress"; `gh pr view --json state` = MERGED |
+| Not reached | human review requests changes; rebase conflict; cross-repo; wizard; GitLab and Bitbucket commands; `release` and `closing` |
+
+Findings fixed afterwards (33 in all, recorded outside the repo): no-CI fallback for state check 2 and hosting.md; default branch from `gh repo view` when origin/HEAD is unset; run the suite from the root with `.claude/worktrees` excluded (the main checkout counted every test twice while the worktree existed); open plan named with its unchecked count and a stale-plan question; model tier rule; loop.md step 1 is two commands; step 2 for plan-less entries; type-check and build in step 3; reviewers mark findings load-bearing or cosmetic; step 5 pre-chooses the PR option and needs the brief's permission; step 6 belongs to the task session and is done when the host reports merged; lessons when `CLAUDE.md` exists; board moves name the family root; Done list for plan-less cards and `git pull --ff-only` before the tick; Trust prompt on the first card; PR body instead of `--fill`; merge confirm line; GitHub Free has no branch protection; fix.md steps 2 to 4 reordered so red-green is one step.
+
 ## What the runs did not cover
 
-Loop C itself (worktree, implement, verify, review, finish), the board moves, and hosting commands: every run stopped before the first card started. Those need a live session with the sidebar tools and a remote, and are the next thing to test on a real repo.
+A card that receives a review comment, a rebase conflict between two cards, a cross-repo plan, a wizard step, and the GitLab and Bitbucket command cells. The merge, Done and nesting rules were fixed from one card; a second card in the same repository is the test of those fixes.

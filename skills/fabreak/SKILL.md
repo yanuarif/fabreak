@@ -10,10 +10,10 @@ fabreak routes a development request to one ADLC entry, then runs that entry by 
 
 ## Read the state
 
-Run these lookups in order before choosing an entry. Keep the results; entries reuse them.
+Run these lookups from the repository root, in order, before choosing an entry. Keep the results; entries reuse them.
 
 1. Domain model: `test -f CONTEXT.md`.
-2. Test suite: a test script or test config exists; none means "absent". Green: with a remote, the default branch's CI status (hosting.md, Commands); without one, run the suite once and keep its summary line.
+2. Test suite: a test script or test config exists; none means "absent". Green: the default branch's CI status when the remote has CI (hosting.md, Commands); with no remote, or no CI run listed for the default branch, run the suite once from the repository root and keep its summary line. The app's worktrees live under `.claude/worktrees/` inside the repository and most runners discover their tests too; exclude that folder in the runner's config (bootstrap adds it).
 3. Open plan: `grep -rl '^- \[ \]' docs/superpowers/plans 2>/dev/null`.
 4. Task worktree: `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, and `git rev-parse --show-superproject-working-tree` prints nothing.
 5. The argument and its flags. `--grill` (feature): grilling before brainstorming. `--release` (fix): the release branch first, then a backport.
@@ -22,9 +22,9 @@ Rows are read top-down; the first match wins.
 
 | State | Entry |
 |---|---|
-| Argument given | That entry. Name any open plan in one line first. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
+| Argument given | That entry. Name any open plan in one line first, with its unchecked task count. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
 | Task worktree | loop.md, resuming this worktree's task. |
-| Open plan, no argument | Show the board (board.md), then loop.md on the next unchecked task. |
+| Open plan, no argument | Show the board (board.md), then loop.md on the next unchecked task. A plan whose unchecked tasks already exist in the code is stale: one question, `replan` to tick it or ignore it. |
 | No CONTEXT.md, no source files | new |
 | No CONTEXT.md, source files present | takeover |
 | CONTEXT.md, no open plan, the request is a bug | fix |
@@ -55,7 +55,7 @@ Read `entries/<name>.md` only after the entry is chosen. fabreak owns every hand
 
 - Plan before code. Exceptions: fix, refactor, upgrade, docs-only.
 - One task = one card = one session = one worktree = one PR or MR.
-- Reviewers are fresh subagents. The implementer never reviews its own work.
+- Reviewers are fresh subagents. The implementer never reviews its own work. Model tier per dispatch: reviewers of a diff under about 200 lines and mechanical implementers run on the cheaper tier; design-heavy work runs on the session's own tier.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me.
 - A question stops the session. In a task session: one question with answer buttons. In the orchestrator: the interview round of the skill in use (a grilling round, a brainstorming section). Either way, wait; the owner's answer resumes the same session. A guess past a question is a defect.
