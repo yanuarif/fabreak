@@ -6,7 +6,7 @@ argument-hint: "[request]"
 
 # fabreak
 
-fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Each entry is also its own command, `/fabreak:<entry>`; typed that way, the entry's file names this router as its first step. Three parties: the owner, this orchestrator session, and a fresh subagent per task. Roles are skills; the model tier is picked per dispatch.
+fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Each entry is also its own command, `/fabreak:<entry>`; typed that way, the entry's file names this router as its first step. Three parties: the owner, this orchestrator session, and one task session per card, which implements its task. Fresh subagents review, research, and may take a mechanical task. Roles are skills; the model tier is picked per dispatch.
 
 ## Read the state
 
@@ -55,7 +55,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 
 - Plan before code. Exceptions: fix, refactor, upgrade, docs-only.
 - One task = one card = one session = one worktree = one PR or MR.
-- Reviewers are fresh subagents. The implementer never reviews its own work. Model tier per dispatch: reviewers of a diff under about 200 lines and mechanical implementers run on the cheaper tier; design-heavy work runs on the session's own tier.
+- Reviewers are fresh subagents. The implementer never reviews its own work. Model tier per dispatch: reviewers of a diff under about 200 lines and a mechanical task's implementer subagent run on the cheaper tier; design-heavy work runs on the session's own tier.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me.
 - A question stops the session. In a task session: one question with answer buttons. In the orchestrator: the interview round of the skill in use (a grilling round, a brainstorming section). Either way, wait; the owner's answer resumes the same session. A guess past a question is a defect.

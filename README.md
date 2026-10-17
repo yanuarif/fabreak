@@ -2,7 +2,7 @@
 
 fabreak is a Claude Code plugin that runs the Agentic Development Lifecycle (ADLC): one command per entry (`/fabreak:new`, `/fabreak:fix`, `/fabreak:release`, and so on) and a router, `/fabreak`, that reads the state of a repository and picks the entry. Every entry then invokes the right skills from [superpowers](https://github.com/obra/superpowers), [mattpocock-skills](https://github.com/mattpocock/skills) and [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) in a fixed order. It copies nothing from those skills; it routes to them.
 
-Three parties take part: the repo owner, the orchestrator session where a `/fabreak` command was typed, and a fresh subagent per task. Roles are skills, not named agents.
+Three parties take part: the repo owner, the orchestrator session where a `/fabreak` command was typed, and one task session per card, which implements its task while fresh subagents review it. Roles are skills, not named agents.
 
 ![The ADLC as fabreak runs it](docs/adlc.svg)
 
