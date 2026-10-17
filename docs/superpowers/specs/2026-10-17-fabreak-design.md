@@ -7,7 +7,7 @@ fabreak is a Claude Code plugin with one skill per entry, each a `/fabreak:<entr
 Three, and only three:
 
 - **Owner** — the human who owns the repo. Does what only a human can do: secrets, deploys, store consoles, branch protection, access. Answers questions.
-- **Orchestrator session** — the Claude Code session where a `/fabreak` command was invoked. Reads state, runs the entry, keeps the board and the plan, proposes task cards.
+- **Orchestrator session** — the Claude Code session where a `/fabreak` command was invoked. Reads state, runs the entry, keeps the board and the plan, starts task cards.
 - **Task session per card** — the app session a card starts; it implements its one task. Fresh subagents review, research, and may take a mechanical task. Roles are skills, not named agents. The model tier is chosen per dispatch. Reviewers are always fresh; an implementer never reviews its own work.
 
 ## Plugin layout
@@ -68,7 +68,7 @@ Written once, in SKILL.md:
 - Reviewers are fresh subagents; the implementer never reviews itself.
 - Verification evidence is command output: the runner's summary line printed verbatim with its exit code.
 - Actions only a human may take (secrets, deploys, store consoles, branch protection, access) go through a wizard and park the session in Waiting on me.
-- A question stops the session: one question, answer buttons, never a guess.
+- A question stops the session: the message spells out the question and every option, the buttons or the question tool below repeat it, never a guess.
 
 ## Entries
 
@@ -85,7 +85,7 @@ Each `skills/<entry>/SKILL.md` has, after its router paragraph, the same five se
 | `refactor` | C1 | mattpocock-skills:codebase-design → mattpocock-skills:tdd (characterization when missing) → `loop.md` | Spec axis = "`tests/` unchanged and green". |
 | `upgrade` | C1 | superpowers:systematic-debugging → `loop.md` → mattpocock-skills:wizard | One card per version jump; verification = whole suite plus build of every target; store console changes by the owner. |
 | `docs-only` | C1 light | frontend-design (when the docs are rendered) → mattpocock-skills:code-review (Standards only) → `loop.md` light | No unit tests; verification = lint or preview; Standards axis only. |
-| `replan` | A4 | superpowers:brainstorming → superpowers:writing-plans | Spec updated in place; remaining tasks rewritten; stale Backlog cards withdrawn; the plan records the replacement. |
+| `replan` | A4 | superpowers:brainstorming → superpowers:writing-plans | Spec updated in place; remaining tasks rewritten; stale held cards archived; the plan records the replacement. |
 | `release` | after D | superpowers:verification-before-completion → mattpocock-skills:wizard | All plan cards Done and main CI green; version, changelog, evidence under `evidence/`; store steps by wizard; tag last. |
 | `closing` | after D | superpowers:writing-plans → superpowers:verification-before-completion → mattpocock-skills:wizard | One card per feature: UAT scenario, evidence, closing note; client steps park the session; access revocation by wizard. |
 
@@ -95,10 +95,10 @@ Entry files name skills with the `plugin:skill` form the Skill tool accepts. Arg
 
 The board is the Claude Code desktop sidebar. Five sections, created when missing (`list_sections`, then `create_section`): **Backlog**, **In progress**, **Waiting on me**, **Review**, **Done**.
 
-- A plan task becomes a **card**: a session proposal (`start_session`, `own_initiative`) whose brief is the task's text from the plan, the spec path, and the plan path. One task, one card. Proposal cards live in the orchestrator's transcript until the owner starts them.
-- Starting a card creates a linked session in its own worktree. The task session files itself under **In progress** (`move_sessions` with `"self"`).
+- A plan task becomes a **card**: a task session the orchestrator starts (`start_session`, `user_asked`, after one card round with the owner) whose brief is the task's text from the plan, the spec path, the plan path, its dependencies and its run or held state. One task, one card; every task gets its card when the plan is committed, and at most three run at once (amended 2026-10-17, `2026-10-17-cards-and-questions-design.md`).
+- A card is a linked session in its own worktree, nested under the family root; the family moves as one (`move_sessions` naming the root and `"self"`), so the column shows the card that moved last.
 - **Waiting on me**: a session that stopped with a question or a wizard. **Review**: a PR or MR is open. **Done**: merged; the task session is marked completed and the orchestrator ticks the plan task.
-- **Backlog** holds started sessions that are held: a cross-repo card waiting for its dependency to merge.
+- **Backlog** is the family's column before the first card runs. A held card (a dependency not yet merged, or three cards already running) ends its turn with a recap and waits for the orchestrator's wake-up message; it never moves the family.
 - Moving a session that is not "self" asks the owner first; fabreak accepts that prompt rather than working around it.
 - **CLI fallback**: when the sidebar tools are absent, the board is printed as text from the plan: unchecked tasks as Backlog, tasks with an open PR as Review (from `hosting.md`), checked tasks as Done.
 
@@ -111,15 +111,15 @@ The same loop for every entry that writes code. Per task session:
 3. superpowers:verification-before-completion — the runner's summary line printed verbatim, with the exit code.
 4. mattpocock-skills:code-review by fresh subagents, two axes. Spec source = the task's plan path. For `fix`, the bug report. For `refactor`, "`tests/` unchanged and green".
 5. superpowers:finishing-a-development-branch — green suite, then PR or MR via `hosting.md`. Card to Review.
-6. Merge: card to Done; the orchestrator ticks the task in the plan and commits the plan.
+6. Merge: merge report to the orchestrator, card to Done; the orchestrator ticks the task, commits the plan and wakes the next held card.
 
 Rules inside the loop:
 
 - **Rebase conflict** (another card merged first): mattpocock-skills:resolving-merge-conflicts on the own branch, suite rerun, review rerun on the conflicting files only. The orchestrator records in the plan that the task split was wrong; the shared seam goes into `CLAUDE.md`.
 - **Human review rejects**: the PR comment wakes the same session. superpowers:receiving-code-review verifies the comment first; spec and tests are updated before code.
 - **Debugging** when something fails mid-loop: superpowers:systematic-debugging, or mattpocock-skills:diagnosing-bugs when a tight feedback loop is missing. Red test first.
-- **Cross-repo**: one spec, one plan, cards in several repos with dependencies. The client card is held in Backlog until the API contract merges; then repos run in parallel.
-- **A question stops the session**: one question, answer buttons, card to Waiting on me. The answer resumes the same session.
+- **Cross-repo**: one spec, one plan, cards in several repos with dependencies. The client card is held (recap, no move) until the API contract merges; then repos run in parallel.
+- **A question stops the session**: the question and every option in the message, buttons below, card to Waiting on me. The answer resumes the same session.
 
 ## Hosting (`hosting.md`)
 
@@ -181,3 +181,8 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 ### 2026-10-18, after the live card runs
 
 - **Implementer.** The task session implements its task; superpowers:subagent-driven-development and superpowers:executing-plans are no longer named in loop step 2. Reason: across the live card sessions on plan tasks, no session invoked either skill and no session dispatched an implementer subagent; the card session already is the fresh context per task, and the skills' own per-task review repeats loop step 4. A mechanical task may still go to one implementer subagent on the cheaper tier.
+- **Board moves in the brief.** The card brief carries the moves the task session makes (item 6) and loop step 1 moves the card to In progress. Reason: no card session started from an installed plugin moved its card; the moves lived only in board.md, which card sessions did not reread.
+- **The plan file belongs to the orchestrator.** A task session does not edit the plan; plan findings go in the PR or MR body under "For the plan". Reason: parallel cards that each wrote their findings into the plan conflicted at merge.
+- **Named skills are invoked.** A skill a step names is invoked with the Skill tool; running its commands by hand does not count. Reason: card sessions ran the suite and opened PRs by hand, and skipped systematic-debugging in every fix card.
+- **Review is never skipped.** docs-only runs the Standards axis, every other entry both axes, through code-review. Reason: a docs-only card merged without review and two fix cards used a single reviewer.
+- **Entry switch and Done when.** Work that belongs to another entry switches to that entry's file, and an entry ends only when its "Done when" holds or the unmet line is named to the owner. Reason: a takeover's change step became a release plan written by hand, and no wizard ran for branch protection or store steps.
