@@ -1,0 +1,23 @@
+name: check
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbidden words
+        run: bash scripts/check-forbidden-words.sh --all
+      - name: Checker self-test
+        run: bash tests/forbidden-words.test.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate plugin
+        run: claude plugin validate --strict .
+      - name: Fixture suites
+        run: cd tests/fixtures/legacy-no-context && node --test

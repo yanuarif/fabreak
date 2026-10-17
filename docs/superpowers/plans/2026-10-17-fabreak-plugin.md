@@ -80,8 +80,8 @@ printf '%s\n' "$(printf 'zorblat' | shasum -a 256 | cut -c1-64)" > "$FORBIDDEN_H
 printf 'the zorblat is here\n' > "$tmp/hit.md"
 printf 'the Zorblat-app is here\n' > "$tmp/hit-hyphen.md"
 printf 'zorblatter is fine\n' > "$tmp/clean.md"
-printf 'see /Users/someone/x\n' > "$tmp/path.md"
-printf 'see claude.ai/artifact/abc\n' > "$tmp/link.md"
+printf 'see /%s/someone/x\n' Users > "$tmp/path.md"
+printf 'see %s.ai/artifact/abc\n' claude > "$tmp/link.md"
 printf 'install: github.com/zorblat/fabreak\n' > "$tmp/url.md"
 "$check" "$tmp/hit.md" >/dev/null 2>&1;        assert_exit 1 $? "whole word hit"
 "$check" "$tmp/hit-hyphen.md" >/dev/null 2>&1; assert_exit 1 $? "hyphenated, case-insensitive hit"
@@ -107,12 +107,12 @@ Expected: every line `FAIL` (script missing, exit 127).
 # The word list is stored as SHA-256 hashes (scripts/forbidden-words.sha256) so the
 # words themselves never appear in the repo. Matching is whole-word, case-insensitive;
 # tokens are taken with and without hyphens. Two plain substrings are always rejected:
-# "/Users/" and "claude.ai/artifact". The exact install URL github.com/<owner>/fabreak
+# a macOS home path prefix and a private artifact link. The exact install URL github.com/<owner>/fabreak
 # is stripped before scanning.
 set -u
 root=$(cd "$(dirname "$0")/.." && pwd)
 hashes="${FORBIDDEN_HASHES:-$root/scripts/forbidden-words.sha256}"
-plain_patterns='/Users/|claude\.ai/artifact'
+plain_patterns="/$(printf Users)/|$(printf claude)\.ai/artifact"
 
 files=()
 case "${1:-}" in
@@ -402,7 +402,7 @@ git commit -m "Record fixture dry runs"
 
 - [ ] **Step 1: Draw `docs/adlc.svg`** — a generic redraw of the chart: router on top; lane A (grilling, brainstorming, domain-modeling, writing-plans, bootstrap, with research/prototype/spike on the side); lane B (research, domain-modeling, codebase-design, characterization tdd, grilling → brainstorming, with writing-for-agents and setup on the side); the session-per-task node; loop C band with its five nodes and four rule nodes; PR/MR → CI → merge, release, closing; Waiting on me + wizard, writing-skills + writing-for-agents; the three back edges. English labels, no links, inline styles only.
 
-- [ ] **Step 2: Write `README.md`**: what fabreak is (three sentences), the SVG, install (`claude plugin marketplace add yanuarif/fabreak`, `claude plugin install fabreak@fabreak --scope user`), the CLAUDE.md line `Every development request starts with /fabreak`, prerequisites with repo links (superpowers: https://github.com/obra/superpowers, mattpocock-skills: https://github.com/mattpocock/skills, frontend-design: https://github.com/anthropics/claude-plugins-official), the entry table (argument, when), honest limits (board only in the Claude Code desktop app; PR monitor and Auto-fix only on GitHub; Bitbucket through the REST API or manual steps).
+- [ ] **Step 2: Write `README.md`**: what fabreak is (three sentences), the SVG, install (`claude plugin marketplace add https://github.com/yanuarif/fabreak`, `claude plugin install fabreak@fabreak --scope user`), the CLAUDE.md line `Every development request starts with /fabreak`, prerequisites with repo links (superpowers: https://github.com/obra/superpowers, mattpocock-skills: https://github.com/mattpocock/skills, frontend-design: https://github.com/anthropics/claude-plugins-official), the entry table (argument, when), honest limits (board only in the Claude Code desktop app; PR monitor and Auto-fix only on GitHub; Bitbucket through the REST API or manual steps).
 
 - [ ] **Step 3: Write `LICENSE`** (MIT, `Copyright (c) 2026 Yanuar Arifin`), `CONTRIBUTING.md` (enable the hook with `git config core.hooksPath .githooks`, run `bash scripts/check-forbidden-words.sh --all` and `claude plugin validate --strict .` before a PR, English only, generic examples, add a word to the guard with `scripts/forbidden-words-add.sh`), `.gitignore` (`.DS_Store`, `node_modules/`, `../fabreak-notes` is outside the repo and needs no entry).
 

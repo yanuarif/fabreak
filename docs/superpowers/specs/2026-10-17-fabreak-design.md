@@ -139,7 +139,7 @@ Sessions are not an archive. The plan in git is: tasks ticked when their PR merg
 ## Public repo rules
 
 - No project, client, organization, or person names, no home paths, no private links. The list of forbidden words is stored as SHA-256 hashes in `scripts/forbidden-words.sha256`; the words themselves never appear in the repo.
-- Matching: whole word, case-insensitive, after lowercasing; tokens are taken both with and without hyphens so hyphenated names match. `/Users/` and `claude.ai/artifact` are matched as plain substrings. The exact install URL `github.com/<owner>/fabreak` is stripped before scanning, so the owner's handle may appear only there.
+- Matching: whole word, case-insensitive, after lowercasing; tokens are taken both with and without hyphens so hyphenated names match. A macOS home path prefix and a private artifact link are matched as plain substrings. The exact install URL `github.com/<owner>/fabreak` is stripped before scanning, so the owner's handle may appear only there.
 - The pre-commit hook scans staged files; CI scans all tracked files. Same script.
 - Examples use fictional generic projects ("a todo API", "a legacy invoicing app").
 - MIT license, copyright holder "Yanuar Arifin".
