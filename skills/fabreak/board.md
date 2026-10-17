@@ -23,6 +23,7 @@ One plan task becomes one card: a task session the orchestrator starts. Every un
 5. The git permissions the owner gave in the card round: commit on the branch; push and open the PR or MR; merge. What is not listed stops the session with a question (SKILL.md rule).
 6. The tasks this one depends on, by title, and this card's state: **run** when every dependency is ticked in the plan and fewer than three cards run, otherwise **held**. At most three cards run at once; a running card is a session of this plan that is neither Done nor held.
 7. The orchestrator's session id, from `get_session "self"`, for the merge report (Done).
+8. The board moves this session makes (Moves, below): `move_sessions` with `session_ids: [<root>, "self"]` to In progress when it enters loop.md step 1 in run state, Waiting on me at a question, Review when the PR or MR opens, Done after the merge; a held card makes no move. The brief names the root id when the orchestrator knows it; otherwise the card's first `["self"]` refusal names it.
 
 `background` carries the project in two or three sentences and the rules for every entry from SKILL.md.
 
