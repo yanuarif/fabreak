@@ -12,6 +12,8 @@ jobs:
         run: bash scripts/check-forbidden-words.sh --all
       - name: Checker self-test
         run: bash tests/forbidden-words.test.sh
+      - name: Plan board tests
+        run: python3 -m unittest tests/test_plan_board.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22

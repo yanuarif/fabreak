@@ -704,7 +704,7 @@ git commit -m "Render the plan board page"
 **Interfaces:**
 - Consumes: `scripts/plan-board.py` CLI from Task 2 (`--root`, `--port`, the `/healthz` route, the port formula).
 
-- [ ] **Step 1: Write the command skill**
+- [x] **Step 1: Write the command skill**
 
 Create `skills/board/SKILL.md`:
 
@@ -732,7 +732,7 @@ Opens the plan board: a read-only kanban view of `docs/superpowers/plans`, serve
 The pane shows the board, or the URL and the CLI fallback are printed.
 ```
 
-- [ ] **Step 2: Point board.md at it**
+- [x] **Step 2: Point board.md at it**
 
 In `skills/fabreak/board.md`, insert before the line `## CLI fallback`:
 
@@ -743,7 +743,7 @@ In the desktop app, "Show the board" also opens the plan board: a read-only page
 
 ```
 
-- [ ] **Step 3: CI, README, CONTRIBUTING, version**
+- [x] **Step 3: CI, README, CONTRIBUTING, version**
 
 In `.github/workflows/check.yml`, after the "Checker self-test" step add:
 
@@ -779,7 +779,7 @@ python3 -m unittest tests/test_plan_board.py
 
 Set `"version": "0.3.0"` in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run from the repo root:
 
@@ -789,7 +789,7 @@ bash scripts/check-forbidden-words.sh --all && bash tests/forbidden-words.test.s
 
 Expected: no forbidden-word output, `all checks passed`, `OK`, and the validator's success line; exit code 0. Then run the command's steps 1 to 4 on this repository itself (its plan folder holds two plans) and confirm the dropdown shows both and the default is this plan, since it still has unchecked steps.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add skills/board/SKILL.md skills/fabreak/board.md .github/workflows/check.yml README.md CONTRIBUTING.md .claude-plugin/plugin.json .claude-plugin/marketplace.json
