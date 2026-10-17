@@ -20,7 +20,7 @@ An empty or nearly empty repo; a product shaped from scratch. State: no `CONTEXT
 3. mattpocock-skills:domain-modeling on the spec: every term the spec uses lands in `CONTEXT.md`; every decision that had alternatives lands in `docs/adr/`.
 4. superpowers:writing-plans from the spec: `docs/superpowers/plans/<date>-<topic>.md`, small tasks, each naming the tasks it depends on and the seams it tests at.
 5. The `bootstrap` entry, for the first repo only.
-6. board.md: one card per unblocked task.
+6. board.md: the card round, then one card per task.
 
 ## Artifacts
 
@@ -32,4 +32,4 @@ Grilling's frontier is empty and brainstorming's last section is approved.
 
 ## Done when
 
-The plan is committed on the default branch, bootstrap is done, and the first cards are proposed. Code waits for a card.
+The plan is committed on the default branch, bootstrap is done, and every task has a card. Code is written only by a card in run state.

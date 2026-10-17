@@ -89,3 +89,9 @@ Two takeovers on private repositories ran from the installed plugin (0.1.0 and 0
 ## What the runs did not cover
 
 A card that receives a review comment, a rebase conflict between two cards, a cross-repo plan, a wizard step, and the GitLab and Bitbucket command cells. The merge, Done and nesting rules were fixed from one card; a second card in the same repository is the test of those fixes.
+
+## Changes from live use: cards and questions
+
+Date: 2026-10-17. After a day of live use (a product built from scratch with an eighteen-task plan, and a takeover with characterization cards) the owner reported two things. A task session's question showed only the closing box's short question and its one-to-three-word buttons, so the options could not be understood; and plan tasks appeared only as proposal cards, at most three per turn and only once their dependencies were Done, and a proposal was sometimes not shown at all (a turn started by another session's message cannot start or propose sessions).
+
+Changes, recorded in `docs/superpowers/specs/2026-10-17-cards-and-questions-design.md`: the question rule now requires the message to spell out every option, with the app's question tool for more than two; a wizard prints its stage list before parking and runs through `tee`; the orchestrator starts every task as a session after one card round (git permissions, start now), with run or held state in the brief and at most three running; a held card ends its turn with a recap and is woken by the orchestrator's message when a merge unblocks it; a merged card reports to the orchestrator. Version 0.3.0. Untested until the next plan runs: the wake-up message, the sync of a held card's worktree, and the three-running cap.
