@@ -54,6 +54,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 ## What it enforces
 
 - Plan before code, except for `fix`, `refactor`, `upgrade` and `docs-only`.
+- A change with screens is designed on a Claude Design canvas and approved before its spec is written; the cards that build those screens implement against the canvas.
 - One task = one card = one session = one worktree = one PR or MR.
 - Reviewers are fresh subagents; the implementer never reviews its own work.
 - Each card starts on a model tier picked from its task: a mechanical task on the cheaper tier, a task with a design choice left on the orchestrator's own.
@@ -69,6 +70,7 @@ skills/fabreak/SKILL.md      the router: state detection, entry table, rules for
 skills/<entry>/SKILL.md      one skill per entry, the /fabreak:<entry> command; read by the router only when that entry is chosen
 skills/fabreak/board.md      the board: sidebar sections, cards, moves, CLI fallback
 skills/fabreak/loop.md       loop C: worktree, implement, verify, review, finish, merge
+skills/fabreak/design.md     the design step: screens on a Claude Design canvas, approved before the spec
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection
 skills/board/SKILL.md        the /fabreak:board command: starts the plan board and opens it in the preview pane
 scripts/plan-board.py        the plan board server: one page from docs/superpowers/plans, read-only, 127.0.0.1

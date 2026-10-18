@@ -19,6 +19,7 @@ skills/fabreak/SKILL.md             router: state detection, argument table, rul
 skills/<entry>/SKILL.md             one skill per entry (12): the /fabreak:<entry> command
 skills/fabreak/board.md             sidebar board mechanics and CLI fallback
 skills/fabreak/loop.md              loop C and its rules
+skills/fabreak/design.md            the design step: screens on a Claude Design canvas
 skills/fabreak/hosting.md           hosting detection, PR/MR, CI, branch protection
 docs/adlc.svg                       the ADLC chart, generic
 docs/dry-runs.md                    fixture dry-run log
@@ -77,10 +78,10 @@ Each `skills/<entry>/SKILL.md` has, after its router paragraph, the same five se
 
 | Entry | Lane | Skills, in order | What differs from the full lane |
 |---|---|---|---|
-| `new` | A1 | mattpocock-skills:grilling → superpowers:brainstorming → mattpocock-skills:domain-modeling → superpowers:writing-plans → `bootstrap` | Full lane A, then bootstrap before the first card. |
-| `feature` | A2 | superpowers:brainstorming → mattpocock-skills:domain-modeling → superpowers:writing-plans | Grilling skipped unless `--grill`; brainstorming narrowed to the feature; new terms go to `CONTEXT.md`. |
+| `new` | A1 | mattpocock-skills:grilling → superpowers:brainstorming (+ `design.md` when the product has screens) → mattpocock-skills:domain-modeling → superpowers:writing-plans → `bootstrap` | Full lane A, then bootstrap before the first card. |
+| `feature` | A2 | superpowers:brainstorming (+ `design.md` when the feature has screens) → mattpocock-skills:domain-modeling → superpowers:writing-plans | Grilling skipped unless `--grill`; brainstorming narrowed to the feature; new terms go to `CONTEXT.md`. |
 | `takeover` | B1 | mattpocock-skills:research → mattpocock-skills:domain-modeling → mattpocock-skills:codebase-design → mattpocock-skills:writing-for-agents → mattpocock-skills:tdd (characterization) → grilling → brainstorming → writing-plans | Repo stays on the owner's hosting; characterization tests before any change; one card per module. |
-| `spike` | A3 branch | mattpocock-skills:research → mattpocock-skills:prototype (+ frontend-design when UI) → mattpocock-skills:domain-modeling | Time-boxed; branch archived, never merged; output is an ADR and an updated plan. |
+| `spike` | A3 branch | mattpocock-skills:research → mattpocock-skills:prototype (+ `design.md` when UI) → mattpocock-skills:domain-modeling | Time-boxed; branch archived, never merged; output is an ADR and an updated plan. |
 | `bootstrap` | A5 | mattpocock-skills:writing-for-agents → mattpocock-skills:setup-pre-commit (when a `package.json` exists) → mattpocock-skills:wizard | `CLAUDE.md`, CI, pre-commit by fabreak; branch protection and CI secrets by the owner through the wizard. |
 | `fix` | C1 | superpowers:systematic-debugging → mattpocock-skills:diagnosing-bugs (when the loop is not tight) → mattpocock-skills:tdd → `loop.md` | No spec; reproduce and red test first; Spec axis = the bug report; `--release` uses the release branch then backports. |
 | `refactor` | C1 | mattpocock-skills:codebase-design → mattpocock-skills:tdd (characterization when missing) → `loop.md` | Spec axis = "`tests/` unchanged and green". |
@@ -192,3 +193,7 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 ### 2026-10-18, card tier (0.4.1)
 
 - **Card tier.** The orchestrator picks each card's model at `start_session` (board.md, Tier): a mechanical task (every file and change named, no design choice left) starts on a Sonnet model id, every other task inherits the orchestrator's tier, and the brief names the tier and its reason. Loop step 2 no longer offers an implementer subagent for a mechanical task. This replaces the last sentence of the 2026-10-18 "Implementer" change. Reason: no card start passed `model`, so every card inherited the orchestrator's tier and no implementation ever ran on the cheaper tier; the optional implementer subagent was never dispatched in a live run. The orchestrator already plays the controller of subagent-driven-development, with one fresh card per task; the tier choice per task was the piece missing from that pattern.
+
+### 2026-10-18, design step (0.5.0)
+
+- **Design step.** `new`, `feature` and `spike`'s UI branch put the chosen approach's screens on a Claude Design canvas (an Artifact of the type "Design") before the spec is written; the owner approves it in an interview round, and the spec's Screens section (a spike's ADR) records the canvas URL and its artboards. Plan tasks that build a screen name the canvas and artboards, a card reads the canvas and invokes frontend-design:frontend-design while it implements, and the Spec reviewer checks each screen against its artboard. The step lives in `skills/fabreak/design.md`. Reason: no step showed the owner a screen before a PR; frontend-design gave the implementer direction but produced nothing to approve. Details: `2026-10-18-design-step-design.md`.

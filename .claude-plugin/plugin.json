@@ -1,6 +1,6 @@
 {
   "name": "fabreak",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Runs the Agentic Development Lifecycle: one command per entry plus a router, invoking superpowers, mattpocock-skills and frontend-design.",
   "author": { "name": "Yanuar Arifin" },
   "homepage": "https://github.com/yanuarif/fabreak",
