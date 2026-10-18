@@ -15,7 +15,7 @@ Run these lookups from the repository root, in order, before choosing an entry. 
 1. Domain model: `test -f CONTEXT.md`.
 2. Test suite: a test script or test config exists; none means "absent". Green: the default branch's CI status when the remote has CI (hosting.md, Commands); with no remote, or no CI run listed for the default branch, run the suite once from the repository root and keep its summary line. The app's worktrees live under `.claude/worktrees/` inside the repository and most runners discover their tests too; exclude that folder in the runner's config (bootstrap adds it).
 3. Open plan: `grep -rl '^- \[ \]' docs/superpowers/plans 2>/dev/null`.
-4. Task worktree: `"${CLAUDE_PLUGIN_ROOT}/scripts/task-worktree.sh" <default>` exits 0, with the default branch from hosting.md. It matches a worktree (not a submodule) with a commit past that branch or an uncommitted change; the app gives every session a worktree, and a clean one at the branch's tip is not a task.
+4. Task worktree: `"${CLAUDE_PLUGIN_ROOT}/scripts/task-worktree.sh" <default>` exits 0 (default branch: hosting.md); any other exit is no match.
 5. The entry, when one was named: by its command `/fabreak:<entry>`, or as the first word of this skill's argument. Flags: `--grill` (feature): grilling before brainstorming. `--release` (fix): the release branch first, then a backport.
 
 Rows are read top-down; the first match wins.
