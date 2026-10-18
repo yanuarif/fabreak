@@ -11,7 +11,7 @@ Entry `feature` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/SK
 
 ## When
 
-A change to a repo that has `CONTEXT.md` and no open plan for this change.
+A change to a repo that has `CONTEXT.md` and no open plan for this change. Named without `CONTEXT.md`: one question first, whether `takeover` was meant.
 
 ## Steps
 
