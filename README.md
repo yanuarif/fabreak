@@ -59,7 +59,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Each card starts on a model tier picked from its task: a mechanical task on the cheaper tier, a task with a design choice left on the orchestrator's own.
 - Verification evidence is command output: the test runner's summary line and exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through a wizard and park the session.
-- A question stops the session, never a guess: the message spells out the question and every option, and the buttons below repeat it; an interview (grilling, brainstorming) asks its round in the same form.
+- A question stops the session, never a guess, and the message alone answers it: an interview round (grilling, brainstorming, spec approval) is plain chat, a discrete choice uses the app's question tool, and the closing box's buttons are kept for git go-aheads.
 - The plan in git is the durable record: tasks are ticked when their PR merges; replans, archived spikes and wrong task splits are recorded there.
 
 ## Layout

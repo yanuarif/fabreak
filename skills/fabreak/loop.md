@@ -35,4 +35,4 @@ One spec, one plan, cards in several repos, each card naming the cards it depend
 
 ### A question stops the session
 
-The rule from SKILL.md, in its form: the question and every option spelled out in the message, the buttons or the question tool below it; card to Waiting on me, end the turn.
+The rule from SKILL.md, in its form: an interview round as the closing message after a recap-only box, a discrete choice in the question tool, a git go-ahead on the box's buttons; card to Waiting on me, end the turn.
