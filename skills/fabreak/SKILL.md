@@ -6,7 +6,7 @@ argument-hint: "[request]"
 
 # fabreak
 
-fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Each entry is also its own command, `/fabreak:<entry>`; typed that way, the entry's file names this router as its first step. Three parties: the owner, this orchestrator session, and one task session per card, which implements its task. Fresh subagents review, research, and may take a mechanical task. Roles are skills; the model tier is picked per dispatch.
+fabreak routes a development request to one ADLC entry, then runs that entry by invoking installed skills (superpowers, mattpocock-skills, frontend-design). Each entry is also its own command, `/fabreak:<entry>`; typed that way, the entry's file names this router as its first step. Three parties: the owner, this orchestrator session, and one task session per card, which implements its task. Fresh subagents review and research. Roles are skills; the model tier is picked per card and per dispatch.
 
 ## Read the state
 
@@ -55,7 +55,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 
 - Plan before code. Exceptions: fix, refactor, upgrade, docs-only.
 - One task = one card = one session = one worktree = one PR or MR.
-- Reviewers are fresh subagents. The implementer never reviews its own work. Model tier per dispatch: reviewers of a diff under about 200 lines and a mechanical task's implementer subagent run on the cheaper tier; design-heavy work runs on the session's own tier.
+- Reviewers are fresh subagents. The implementer never reviews its own work. Model tier: a mechanical task's card (board.md, Tier) and reviewers of a diff under about 200 lines run on Sonnet; design-heavy cards and reviews run on the orchestrator's or the session's own tier.
 - A skill a step names is invoked with the Skill tool when the step starts, even when its commands look obvious. Running the commands by hand does not count as the step.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me. Before parking, the message lists every stage in order: its purpose, the URL it opens, what to click there, each value it asks for (secret or public), and each decision with its options; then the run command, `bash <script> 2>&1 | tee <log>`, which keeps every stage on screen (the template clears the screen only on a terminal) and leaves the log as the evidence the wizard reports done with.

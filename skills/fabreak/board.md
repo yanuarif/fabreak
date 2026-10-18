@@ -14,7 +14,9 @@ One plan task becomes one card: a task session the orchestrator starts. Every un
 
 **Card round.** Before the first card, one question to the owner (SKILL.md form): the git permissions every card gets (commit on the branch; push and open the PR or MR; merge) and whether to start the cards now. The owner's yes is the ask that lets the orchestrator start sessions, and the starts must happen in the turn the owner's answer began: a turn that another session's message or an automated event started can start nothing (the app refuses), so the orchestrator then repeats the question in its recap and starts the cards on the owner's next message. For an entry without a plan (fix, refactor, upgrade, docs-only, spike) the same round precedes its one card.
 
-**Start.** `start_session` per task, in plan order: `initiation: "user_asked"`, `context: "fresh"`, `use_worktree: true`, `title` = the task's title from the plan. The brief (`prompt`) carries, in this order:
+**Tier.** The orchestrator picks each card's model from its task before the start. A mechanical task runs on the cheaper tier: the plan or the entry's brief names every file and every change, and no design choice is left. Its start passes `model` = a Sonnet model id (the newest one the orchestrator's own system prompt lists). Every other task, and every task when in doubt, inherits the orchestrator's tier: `model` is omitted. An orchestrator already on Sonnet or below omits `model` for every card. Done when every card's tier is named in its brief (item 9).
+
+**Start.** `start_session` per task, in plan order: `initiation: "user_asked"`, `context: "fresh"`, `use_worktree: true`, `title` = the task's title from the plan, and `model` as Tier says. The brief (`prompt`) carries, in this order:
 
 1. The task's full text from the plan, pasted verbatim: steps and verification. For an entry without a plan (fix, refactor, upgrade, docs-only): the entry's own brief text, such as the bug report with the seam the regression test goes through (function and test file), the module design, the breaking-change list or the page list.
 2. The spec path and the plan path, when they exist.
@@ -24,10 +26,11 @@ One plan task becomes one card: a task session the orchestrator starts. Every un
 6. The tasks this one depends on, by title, and this card's state: **run** when every dependency is ticked in the plan and fewer than three cards run, otherwise **held**. At most three cards run at once; a running card is a session of this plan that is neither Done nor held.
 7. The orchestrator's session id, from `get_session "self"`, for the merge report (Done).
 8. The board moves this session makes (Moves, below): `move_sessions` with `session_ids: [<root>, "self"]` to In progress when it enters loop.md step 1 in run state, Waiting on me at a question, Review when the PR or MR opens, Done after the merge; a held card makes no move. The brief names the root id when the orchestrator knows it; otherwise the card's first `["self"]` refusal names it.
+9. The card's tier and its reason, one line: "Tier: cheaper, mechanical: <the files the plan names>" or "Tier: orchestrator's, <the design choice left>".
 
 `background` carries the project in two or three sentences and the rules for every entry from SKILL.md.
 
-After the starts the orchestrator moves the family to Backlog once (Moves) and ends its turn. The first card in a repository may stop at a Trust repository prompt in its own window before it reads the brief; the owner trusts the folder there, and when the card reports that it has no brief the orchestrator sends the brief again with `SendMessage`. Later cards in that repository start at once. Done when every unchecked task has a session.
+After the starts the orchestrator moves the family to Backlog once (Moves) and ends its turn. The first card in a repository may stop at a Trust repository prompt in its own window before it reads the brief; the owner trusts the folder there, and when the card reports that it has no brief the orchestrator sends the brief again with `SendMessage`. Later cards in that repository start at once. Done when every unchecked task has a session started at its tier.
 
 ## Held cards
 

@@ -8,7 +8,7 @@ Three, and only three:
 
 - **Owner** — the human who owns the repo. Does what only a human can do: secrets, deploys, store consoles, branch protection, access. Answers questions.
 - **Orchestrator session** — the Claude Code session where a `/fabreak` command was invoked. Reads state, runs the entry, keeps the board and the plan, starts task cards.
-- **Task session per card** — the app session a card starts; it implements its one task. Fresh subagents review, research, and may take a mechanical task. Roles are skills, not named agents. The model tier is chosen per dispatch. Reviewers are always fresh; an implementer never reviews its own work.
+- **Task session per card** — the app session a card starts; it implements its one task. Fresh subagents review and research. Roles are skills, not named agents. The model tier is chosen per card (the orchestrator, at the start) and per dispatch. Reviewers are always fresh; an implementer never reviews its own work.
 
 ## Plugin layout
 
@@ -108,7 +108,7 @@ The board is the Claude Code desktop sidebar. Five sections, created when missin
 The same loop for every entry that writes code. Per task session:
 
 1. superpowers:using-git-worktrees — the app gives each session a worktree; the skill verifies it.
-2. Implementation: the task session implements its task from the plan, TDD via mattpocock-skills:tdd at agreed seams. A mechanical task may go to one implementer subagent on the cheaper tier.
+2. Implementation: the task session implements its task from the plan, TDD via mattpocock-skills:tdd at agreed seams. A mechanical task's card already runs on the cheaper tier; the session dispatches no implementer subagent.
 3. superpowers:verification-before-completion — the runner's summary line printed verbatim, with the exit code.
 4. mattpocock-skills:code-review by fresh subagents, two axes. Spec source = the task's plan path. For `fix`, the bug report. For `refactor`, "`tests/` unchanged and green".
 5. superpowers:finishing-a-development-branch — green suite, then PR or MR via `hosting.md`. Card to Review.
@@ -188,3 +188,7 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 - **Review is never skipped.** docs-only runs the Standards axis, every other entry both axes, through code-review. Reason: a docs-only card merged without review and two fix cards used a single reviewer.
 - **Entry switch and Done when.** Work that belongs to another entry switches to that entry's file, and an entry ends only when its "Done when" holds or the unmet line is named to the owner. Reason: a takeover's change step became a release plan written by hand, and no wizard ran for branch protection or store steps.
 - **Task worktree lookup.** State check 4 runs `scripts/task-worktree.sh`: a linked worktree counts as a task worktree only with a commit past the default branch or an uncommitted change. Reason: the desktop app gives every session a worktree, so `--git-dir` differing from `--git-common-dir` matched every orchestrator session and routed `/fabreak:fabreak` with no argument to loop.md with no task to resume.
+
+### 2026-10-18, card tier (0.4.1)
+
+- **Card tier.** The orchestrator picks each card's model at `start_session` (board.md, Tier): a mechanical task (every file and change named, no design choice left) starts on a Sonnet model id, every other task inherits the orchestrator's tier, and the brief names the tier and its reason. Loop step 2 no longer offers an implementer subagent for a mechanical task. This replaces the last sentence of the 2026-10-18 "Implementer" change. Reason: no card start passed `model`, so every card inherited the orchestrator's tier and no implementation ever ran on the cheaper tier; the optional implementer subagent was never dispatched in a live run. The orchestrator already plays the controller of subagent-driven-development, with one fresh card per task; the tier choice per task was the piece missing from that pattern.
