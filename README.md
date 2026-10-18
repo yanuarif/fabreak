@@ -56,6 +56,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Plan before code, except for `fix`, `refactor`, `upgrade` and `docs-only`.
 - One task = one card = one session = one worktree = one PR or MR.
 - Reviewers are fresh subagents; the implementer never reviews its own work.
+- Each card starts on a model tier picked from its task: a mechanical task on the cheaper tier, a task with a design choice left on the orchestrator's own.
 - Verification evidence is command output: the test runner's summary line and exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through a wizard and park the session.
 - A question stops the session, never a guess: the message spells out the question and every option, and the buttons below repeat it; an interview (grilling, brainstorming) asks its round in the same form.
