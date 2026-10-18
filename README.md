@@ -71,6 +71,7 @@ skills/fabreak/loop.md       loop C: worktree, implement, verify, review, finish
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection
 skills/board/SKILL.md        the /fabreak:board command: starts the plan board and opens it in the preview pane
 scripts/plan-board.py        the plan board server: one page from docs/superpowers/plans, read-only, 127.0.0.1
+scripts/task-worktree.sh     router state check 4: is this checkout a task worktree
 ```
 
 ## Limits
