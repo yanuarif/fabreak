@@ -26,6 +26,7 @@ docs/superpowers/{specs,plans}/     this spec and its plan (the repo dogfoods fa
 tests/fixtures/<name>/              synthetic repos for dry runs
 scripts/check-forbidden-words.sh    the word check (pre-commit and CI)
 scripts/forbidden-words.sha256      hashed word list
+scripts/task-worktree.sh            state check 4: is this checkout a task worktree
 .githooks/pre-commit                runs the word check on staged files
 .github/workflows/check.yml         plugin validate + word check
 README.md, LICENSE, CONTRIBUTING.md
@@ -42,7 +43,7 @@ Checked in this order, before any entry runs. Each check is a shell lookup, not 
 1. `CONTEXT.md` at the repo root (the domain model exists).
 2. A test suite exists, and whether it is green: the default branch's CI status via `hosting.md` when a remote exists; otherwise run the suite once and keep its summary line.
 3. A plan under `docs/superpowers/plans/` with unchecked tasks (`- [ ]`).
-4. An active worktree: `git rev-parse --git-dir` differs from `--git-common-dir` (and not a submodule) — this session is a task session.
+4. An active worktree: `scripts/task-worktree.sh <default>` exits 0 — a linked worktree (not a submodule) whose branch has a commit past the default branch or an uncommitted change. This session is a task session.
 5. The entry named, by its `/fabreak:<entry>` command or as the router's argument.
 
 Resolution:
@@ -186,6 +187,7 @@ Business development, hypothesis research, project-specific tools. A repo may ad
 - **Named skills are invoked.** A skill a step names is invoked with the Skill tool; running its commands by hand does not count. Reason: card sessions ran the suite and opened PRs by hand, and skipped systematic-debugging in every fix card.
 - **Review is never skipped.** docs-only runs the Standards axis, every other entry both axes, through code-review. Reason: a docs-only card merged without review and two fix cards used a single reviewer.
 - **Entry switch and Done when.** Work that belongs to another entry switches to that entry's file, and an entry ends only when its "Done when" holds or the unmet line is named to the owner. Reason: a takeover's change step became a release plan written by hand, and no wizard ran for branch protection or store steps.
+- **Task worktree lookup.** State check 4 runs `scripts/task-worktree.sh`: a linked worktree counts as a task worktree only with a commit past the default branch or an uncommitted change. Reason: the desktop app gives every session a worktree, so `--git-dir` differing from `--git-common-dir` matched every orchestrator session and routed `/fabreak:fabreak` with no argument to loop.md with no task to resume.
 
 ### 2026-10-18, card tier (0.4.1)
 
