@@ -67,4 +67,5 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 
 - `board.md` — when the board is shown or a card changes section.
 - `loop.md` — when code is written: worktree, implement, verify, review, finish.
+- `design.md` — when an entry's design step runs.
 - `hosting.md` — when a PR or MR, CI status, merge or branch protection is needed.

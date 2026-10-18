@@ -17,13 +17,13 @@ A feasibility or design question that only throwaway code answers, inside a time
 
 1. Write the question and the time box (hours, at most one day) as the first line of one card brief. The branch is `spike/<question-slug>`.
 2. mattpocock-skills:research when a primary source may answer it without code; findings to `docs/research/`. A settled answer skips to step 4.
-3. mattpocock-skills:prototype: the logic branch for a state model, the UI branch for a screen. For UI, frontend-design:frontend-design sets the visual direction once the variations exist. Throwaway and marked as such.
-4. mattpocock-skills:domain-modeling: the answer becomes an ADR in `docs/adr/` with the decision, the alternatives tried, and the spike's evidence.
+3. mattpocock-skills:prototype: the logic branch for a state model, the UI branch for a screen. For UI, the design step (`design.md`, next to the router) sets the visual direction once the variations exist: one artboard per variation on one canvas, and the owner picks one; done when the pick and the canvas URL are written for step 4. Throwaway and marked as such.
+4. mattpocock-skills:domain-modeling: the answer becomes an ADR in `docs/adr/` with the decision, the alternatives tried, and the spike's evidence, with the canvas URL and the picked artboard for a UI question.
 5. Archive the branch: `git tag archive/spike-<slug> <branch>`, then delete the branch. In the plan, put the ADR path next to the tasks it affects and add "spike archived: `archive/spike-<slug>`".
 
 ## Artifacts
 
-`docs/adr/NNNN-<decision>.md`, `docs/research/` when used, the archive tag, the plan note.
+`docs/adr/NNNN-<decision>.md`, `docs/research/` when used, the canvas for a UI question, the archive tag, the plan note.
 
 ## Stop asking when
 
