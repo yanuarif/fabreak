@@ -12,6 +12,8 @@ Before the first card: `list_sections`, then `create_section` for each name that
 
 One plan task becomes one card: a task session the orchestrator starts. Every unchecked task gets its card in the same turn, as soon as the plan is committed, so the whole plan is on the board at once; a task that cannot run yet waits as a held card, not as a line in the plan.
 
+**Stale plan.** A plan whose unchecked tasks already exist in the code is stale: before the card round, one question, `replan` to tick it or ignore it.
+
 **Card round.** Before the first card, one question to the owner (SKILL.md form): the git permissions every card gets (commit on the branch; push and open the PR or MR; merge) and whether to start the cards now. The owner's yes is the ask that lets the orchestrator start sessions, and the starts must happen in the turn the owner's answer began: a turn that another session's message or an automated event started can start nothing (the app refuses), so the orchestrator then repeats the question in its recap and starts the cards on the owner's next message. For an entry without a plan (fix, refactor, upgrade, docs-only, spike) the same round precedes its one card.
 
 **Tier.** The orchestrator picks each card's model from its task before the start. A mechanical task runs on the cheaper tier: the plan or the entry's brief names every file and every change, and no design choice is left. Its start passes `model` = a Sonnet model id (the newest one the orchestrator's own system prompt lists). Every other task, and every task when in doubt, inherits the orchestrator's tier: `model` is omitted. An orchestrator already on Sonnet or below omits `model` for every card. Done when every card's tier is named in its brief (item 9).
@@ -49,6 +51,10 @@ A card whose brief says held, or that is woken and finds a dependency still unme
 | Merged | Done | the task session, after the merge it ran (loop.md step 6) |
 
 A card is nested under the session family's root and cannot move alone: `["self"]` is refused and the refusal names the root id to pass alongside. The family moves as one, so the column shows the card that moved last; with several cards running, the columns are not per card. Every card is still visible as its own row under the orchestrator from the start: read per-card state from the row (running marker, PR badge), from `list_sessions {linked: true}` (`prState`, `group`) and from the plan's ticks. A held card never moves the family. Moving a session other than "self" may ask the owner first; accept that prompt. Done when the section matches the latest event of the card that moved.
+
+## Wizard
+
+A step only a human can take runs through mattpocock-skills:wizard and parks the session in Waiting on me. Before parking, the message lists every stage in order: its purpose, the URL it opens, what to click there, each value it asks for (secret or public), and each decision with its options; then the run command, `bash <script> 2>&1 | tee <log>`, which keeps every stage on screen (the template clears the screen only on a terminal) and leaves the log as the evidence the wizard reports done with. Done when the message lists every stage and the run command.
 
 ## Done
 

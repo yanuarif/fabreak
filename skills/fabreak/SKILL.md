@@ -22,9 +22,9 @@ Rows are read top-down; the first match wins.
 
 | State | Entry |
 |---|---|
-| Entry named | That entry. Name any open plan in one line first, with its unchecked task count. `feature` without CONTEXT.md asks whether `takeover` was meant; fix, refactor, upgrade and docs-only run without one. |
+| Entry named | That entry. Name any open plan in one line first, with its unchecked task count. |
 | Task worktree | loop.md, resuming this worktree's task. |
-| Open plan, no entry named | Show the board (board.md), then the card round for the unchecked tasks that have no card (board.md, Cards); a held card waits for its wake-up. A plan whose unchecked tasks already exist in the code is stale: one question, `replan` to tick it or ignore it. |
+| Open plan, no entry named | Show the board, then the card round for the unchecked tasks that have no card (board.md, Cards). |
 | No CONTEXT.md, no source files | new |
 | No CONTEXT.md, source files present | takeover |
 | CONTEXT.md, no open plan, the request is a bug | fix |
@@ -58,7 +58,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 - Reviewers are fresh subagents. The implementer never reviews its own work. Model tier: a mechanical task's card (board.md, Tier) and reviewers of a diff under about 200 lines run on Sonnet; design-heavy cards and reviews run on the orchestrator's or the session's own tier.
 - A skill a step names is invoked with the Skill tool when the step starts, even when its commands look obvious. Running the commands by hand does not count as the step.
 - Verification evidence is command output: the runner's summary line and its exit code, printed verbatim.
-- Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me. Before parking, the message lists every stage in order: its purpose, the URL it opens, what to click there, each value it asks for (secret or public), and each decision with its options; then the run command, `bash <script> 2>&1 | tee <log>`, which keeps every stage on screen (the template clears the screen only on a terminal) and leaves the log as the evidence the wizard reports done with.
+- Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through mattpocock-skills:wizard and park the session in Waiting on me, with the message board.md, Wizard, defines.
 - A question stops the session, in one of three forms; each states it in full so the owner can answer from the message alone. An interview round (a grilling round, a brainstorming section, a spec approval) is plain chat: the closing box is a recap only, and the section and its question, written out in full, are the closing message after the box. A discrete choice of two to four options goes to the app's question tool, a label and a description per option, with a recap-only box. The box's question and buttons carry only a git go-ahead the app offers (commit, create PR, merge). Wait; the owner's answer resumes the same session. A guess past a question is a defect; so is a section written only in thinking, and an option that appears only in a button label.
 - The durable record is the plan in git, edited by the orchestrator only: tick a task when its PR merges; record replans, archived spikes and wrong task splits there.
 - Work that belongs to another entry (a release, a fix, a spike) switches to that entry's file; its plan is never written by hand. An entry ends only when its "Done when" holds; an unmet line (a wizard not run, evidence not written) is named to the owner, never skipped.
