@@ -15,6 +15,7 @@ fabreak is a set of Markdown files that route to other plugins' skills. Changes 
    ```bash
    bash scripts/check-forbidden-words.sh --all
    bash tests/forbidden-words.test.sh
+   bash tests/task-worktree.test.sh
    python3 -m unittest tests/test_plan_board.py
    claude plugin validate --strict .
    ```
