@@ -1,6 +1,6 @@
 # Board
 
-A card is a task session the orchestrator starts; a session's title is the task's title. The plan in git stays the source of truth. The board is the plan board, a read-only page of the plan's tasks (Plan board, below); a card's own state is read from the sessions themselves (State, below).
+A card is a task session the orchestrator starts; a session's title is the task's title. The plan in git stays the source of truth. The board is the plan board, a live, read-only page of the plan's tasks (Plan board, below); a card's own state is read from the sessions themselves (State, below).
 
 ## Cards
 
@@ -49,7 +49,7 @@ When a PR or MR merges:
 
 ## Plan board
 
-In the desktop app, "Show the board" opens the plan board: a read-only page of the plan's tasks in Backlog, In progress and Done, derived from each task's ticked steps alone. Run the steps of the `board` command, `${CLAUDE_PLUGIN_ROOT}/skills/board/SKILL.md`. The plan board reaches Done when a task's last step is ticked, before the merge; State, above, tells a merged card from one in review. Done when the pane shows the board.
+In the desktop app, "Show the board" opens the plan board: a live, read-only page of the plan's tasks in Backlog, In progress, Review and Done. A task's column comes from its ticked steps, the worktree on its branch (a commit past the default branch or an uncommitted change is In progress) and its PR (open is Review, merged is Done; `gh`, GitHub only), and the page updates as any of them changes. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. Run the steps of the `board` command, `${CLAUDE_PLUGIN_ROOT}/skills/board/SKILL.md`. Done when the pane shows the board.
 
 ## CLI fallback
 

@@ -1,5 +1,7 @@
 # Plan board design
 
+Amended on 2026-10-21 by `2026-10-21-live-board-design.md` (0.7.0): live updates, four columns from the plan, git and PRs, and an interactive page.
+
 A read-only kanban view of a repository's plan, rendered in the Claude Code desktop preview pane. The plan in git stays the only source of truth; the board reads `docs/superpowers/plans/*.md` and shows every task in one of three columns. It writes nothing. One command, `/fabreak:board`, starts it and opens it beside the chat.
 
 The sidebar board in `board.md` is unchanged: sessions stay the cards there, and the moves stay with the task session. The plan board is a second view of the same plan, for reading.
