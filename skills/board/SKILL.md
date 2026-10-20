@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # board
 
-Opens the plan board: a read-only kanban view of `docs/superpowers/plans`, served by `${CLAUDE_PLUGIN_ROOT}/scripts/plan-board.py` on 127.0.0.1. The sidebar board (`${CLAUDE_PLUGIN_ROOT}/skills/fabreak/board.md`) stays the live view of sessions; this page is the live view of the plan.
+Opens the plan board: a read-only kanban view of `docs/superpowers/plans`, served by `${CLAUDE_PLUGIN_ROOT}/scripts/plan-board.py` on 127.0.0.1. Cards are sessions (`${CLAUDE_PLUGIN_ROOT}/skills/fabreak/board.md`, State); this page is the live view of the plan.
 
 ## Steps
 

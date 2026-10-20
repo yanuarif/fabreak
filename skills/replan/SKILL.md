@@ -17,7 +17,7 @@ The spec changed while plan tasks remain: a decision reversed, a scope cut, a sp
 
 1. superpowers:brainstorming on the change only. The existing spec is updated in place, with a dated "Changes" section at the end naming what changed and why. fabreak's step 2 follows.
 2. superpowers:writing-plans: the remaining unchecked tasks are rewritten in the existing plan; ticked tasks stay. A "Replan <date>" section lists each withdrawn task and its replacement.
-3. Board: a held card for a withdrawn task is stopped with a one-line note and archived (`archive_session`); a running one gets one question, finish or stop. New tasks get cards through the card round (board.md).
+3. Cards: a held card for a withdrawn task is stopped with a one-line note and archived (`archive_session`); a running one gets one question, finish or stop. New tasks get cards through the card round (board.md).
 4. Commit the spec and the plan on the default branch.
 
 ## Artifacts

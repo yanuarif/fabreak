@@ -113,3 +113,9 @@ Change, recorded in `docs/superpowers/specs/2026-10-18-design-step-design.md`: a
 Date: 2026-10-18. CONTRIBUTING.md keeps `skills/fabreak/SKILL.md` under 1,500 tokens, estimated as words × 1.4. The router was already over at 0.4.2 (1,118 words, about 1,565 tokens) and the design step's mechanism line took it to 1,127 words (about 1,578).
 
 Change: text that one entry or one mechanism owns left the router, with a pointer in its place. The wizard's parking message (stage list and `tee` run command) moved to board.md, Wizard; the stale-plan question moved to board.md, Cards; the question for `feature` named without `CONTEXT.md` moved to the feature entry's When section. The routing rows lost the held-card note that board.md, Held cards, already gives and the list of entries that run without `CONTEXT.md`, which "Entry named: that entry" already implies. No rule changed. The router is 1,018 words, about 1,425 tokens. Version 0.5.1.
+
+## Changes: no sidebar board, optional CI
+
+Date: 2026-10-21. The owner asked to remove the sidebar board and to make writing CI optional.
+
+Change, recorded in the fabreak design spec's 2026-10-21 changes: board.md keeps the card round, tier, brief, held cards, merge report and plan board, and drops the sidebar sections and every move; a new State section says where per-card state is read. `bootstrap` asks whether to write CI; without it, the local suite run stands in for CI green in loop step 6, `release` and branch protection. Version 0.6.0. Untested until the next live run: a plan's cards without any sidebar call, and a `bootstrap` that answers "no CI".

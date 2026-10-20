@@ -18,7 +18,7 @@ First contact with code that has no domain model: no `CONTEXT.md`, source files 
 1. mattpocock-skills:research with the question "What does this codebase do, and how is it built, tested and run?" The primary source is the code itself: entry points, modules, build and test commands, external services. Findings to `docs/research/<date>-codebase-map.md`; this path wins over the research skill's own default.
 2. mattpocock-skills:domain-modeling on the map: the glossary into `CONTEXT.md`; decisions already visible in the code become retroactive ADRs in `docs/adr/`, marked retroactive.
 3. mattpocock-skills:codebase-design: name the deep modules, the seams, and where tests belong. Output: a "Seams" section in `CONTEXT.md`.
-4. The `bootstrap` entry: step 1 writes `CLAUDE.md`, then CI, pre-commit and the owner's wizard.
+4. The `bootstrap` entry: step 1 writes `CLAUDE.md`, then the CI question, pre-commit and the owner's wizard.
 5. Characterization tests. Ask the one question of this entry: "One card per module; the modules are <list from step 3>. Confirm?" Then the card round and one card per module (board.md), each running loop.md with mattpocock-skills:tdd at the seams from step 3, locking today's behaviour. Spec source for review: "behaviour unchanged: the tests describe what the code does today". Wait until the suite is green on the default branch (state check 2; a local run counts when there is no remote).
 6. The change itself: mattpocock-skills:grilling ("change what, keep what"), superpowers:brainstorming, superpowers:writing-plans; one plan per change. The card round and one card per task (board.md).
 

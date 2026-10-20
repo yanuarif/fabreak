@@ -51,7 +51,7 @@
   <g class="n mp"><rect x="80" y="316" width="220" height="56" rx="4"/><text class="t" x="190" y="339" text-anchor="middle">domain-modeling</text><text class="d" x="190" y="357" text-anchor="middle">CONTEXT.md, docs/adr</text><text class="b" x="292" y="328" text-anchor="end">MP</text></g>
   <g class="n sp"><rect x="80" y="404" width="220" height="56" rx="4"/><text class="t" x="190" y="427" text-anchor="middle">writing-plans</text><text class="d" x="190" y="445" text-anchor="middle">small tasks with dependencies</text><text class="b" x="292" y="416" text-anchor="end">SP</text></g>
   <g class="tag"><rect x="88" y="397" width="44" height="14" rx="3"/><text x="93" y="407">replan</text></g>
-  <g class="n tl"><rect x="80" y="492" width="220" height="56" rx="4"/><text class="t" x="190" y="515" text-anchor="middle">bootstrap repo</text><text class="d" x="190" y="533" text-anchor="middle">CLAUDE.md, CI, pre-commit; protection via wizard</text><text class="b" x="292" y="504" text-anchor="end">tools</text></g>
+  <g class="n tl"><rect x="80" y="492" width="220" height="56" rx="4"/><text class="t" x="190" y="515" text-anchor="middle">bootstrap repo</text><text class="d" x="190" y="533" text-anchor="middle">CLAUDE.md, pre-commit, CI if wanted; wizard</text><text class="b" x="292" y="504" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="88" y="485" width="60" height="14" rx="3"/><text x="93" y="495">bootstrap</text></g>
   <g class="n mp"><rect x="370" y="232" width="220" height="44" rx="4"/><text class="t" x="480" y="250" text-anchor="middle">research</text><text class="d" x="480" y="266" text-anchor="middle">facts from primary sources, into the repo</text><text class="b" x="582" y="244" text-anchor="end">MP</text></g>
   <g class="n mp"><rect x="370" y="288" width="220" height="44" rx="4"/><text class="t" x="480" y="306" text-anchor="middle">prototype + design</text><text class="d" x="480" y="322" text-anchor="middle">UI variations, then frontend-design direction</text><text class="b" x="582" y="300" text-anchor="end">MP+AN</text></g>
@@ -75,7 +75,7 @@
   <g class="n mp"><rect x="660" y="404" width="220" height="56" rx="4"/><text class="t" x="770" y="427" text-anchor="middle">tdd: characterization</text><text class="d" x="770" y="445" text-anchor="middle">lock today's behaviour, one card per module</text><text class="b" x="872" y="416" text-anchor="end">MP</text></g>
   <g class="n sp"><rect x="660" y="492" width="220" height="56" rx="4"/><text class="t" x="770" y="515" text-anchor="middle">grilling → brainstorming</text><text class="d" x="770" y="533" text-anchor="middle">change what, keep what</text><text class="b" x="872" y="504" text-anchor="end">MP+SP</text></g>
   <g class="n mp"><rect x="930" y="316" width="250" height="44" rx="4"/><text class="t" x="1055" y="334" text-anchor="middle">writing-for-agents</text><text class="d" x="1055" y="350" text-anchor="middle">CLAUDE.md: build, test, host's PR rules</text><text class="b" x="1172" y="328" text-anchor="end">MP</text></g>
-  <g class="n tl"><rect x="930" y="372" width="250" height="44" rx="4"/><text class="t" x="1055" y="390" text-anchor="middle">setup skills, pre-commit, CI</text><text class="d" x="1055" y="406" text-anchor="middle">the repo stays on the owner's host</text><text class="b" x="1172" y="384" text-anchor="end">tools</text></g>
+  <g class="n tl"><rect x="930" y="372" width="250" height="44" rx="4"/><text class="t" x="1055" y="390" text-anchor="middle">setup skills, pre-commit, CI?</text><text class="d" x="1055" y="406" text-anchor="middle">the repo stays on the owner's host</text><text class="b" x="1172" y="384" text-anchor="end">tools</text></g>
   <line class="ln" x1="770" y1="196" x2="770" y2="226" marker-end="url(#a)"/><text class="lbl" x="780" y="215">map</text>
   <line class="ln" x1="770" y1="284" x2="770" y2="314" marker-end="url(#a)"/><text class="lbl" x="780" y="303">terms</text>
   <line class="ln" x1="770" y1="372" x2="770" y2="402" marker-end="url(#a)"/><text class="lbl" x="780" y="391">testable seams</text>
@@ -86,7 +86,7 @@
   <text class="lbl" x="530" y="640" text-anchor="middle">writing-plans per change</text>
 
   <!-- Convergence -->
-  <g class="n tl"><rect x="90" y="620" width="200" height="56" rx="4"/><text class="t" x="190" y="643" text-anchor="middle">One session per task</text><text class="d" x="190" y="661" text-anchor="middle">Backlog → In progress → Waiting on me → Review → Done</text><text class="b" x="282" y="632" text-anchor="end">Claude Code</text></g>
+  <g class="n tl"><rect x="90" y="620" width="200" height="56" rx="4"/><text class="t" x="190" y="643" text-anchor="middle">One session per task</text><text class="d" x="190" y="661" text-anchor="middle">run or held; at most three run at once</text><text class="b" x="282" y="632" text-anchor="end">Claude Code</text></g>
   <line class="ln" x1="190" y1="676" x2="190" y2="746" marker-end="url(#a)"/><text class="lbl" x="200" y="738">card started = linked session</text>
   <polyline class="ln back" points="90,648 40,648 40,432 78,432" marker-end="url(#am)"/>
   <text class="lbl" transform="rotate(-90 34 560)" x="34" y="560" text-anchor="middle">replan: spec changed, remaining tasks rewritten</text>
@@ -118,14 +118,14 @@
   <text class="lbl" x="660" y="934" text-anchor="middle">PR or MR; card moves to Review</text>
 
   <!-- Bottom rows -->
-  <g class="n tl"><rect x="90" y="960" width="260" height="56" rx="4"/><text class="t" x="220" y="983" text-anchor="middle">PR/MR → CI → merge</text><text class="d" x="220" y="1001" text-anchor="middle">GitHub, GitLab or Bitbucket; must be green; card Done</text><text class="b" x="342" y="972" text-anchor="end">git host</text></g>
+  <g class="n tl"><rect x="90" y="960" width="260" height="56" rx="4"/><text class="t" x="220" y="983" text-anchor="middle">PR/MR → CI → merge</text><text class="d" x="220" y="1001" text-anchor="middle">GitHub, GitLab or Bitbucket; green; task ticked</text><text class="b" x="342" y="972" text-anchor="end">git host</text></g>
   <g class="n tl"><rect x="400" y="960" width="260" height="56" rx="4"/><text class="t" x="530" y="983" text-anchor="middle">release</text><text class="d" x="530" y="1001" text-anchor="middle">version, changelog, tag, evidence/</text><text class="b" x="652" y="972" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="408" y="953" width="48" height="14" rx="3"/><text x="413" y="963">release</text></g>
   <g class="n tl"><rect x="710" y="960" width="260" height="56" rx="4"/><text class="t" x="840" y="983" text-anchor="middle">handover</text><text class="d" x="840" y="1001" text-anchor="middle">UAT with the client, evidence, closing note, access</text><text class="b" x="962" y="972" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="718" y="953" width="48" height="14" rx="3"/><text x="723" y="963">closing</text></g>
   <line class="ln" x1="350" y1="988" x2="398" y2="988" marker-end="url(#a)"/><text class="lbl" x="374" y="980" text-anchor="middle">version, tag</text>
   <line class="ln soft" x1="660" y1="988" x2="708" y2="988" marker-end="url(#a)"/><text class="lbl" x="684" y="980" text-anchor="middle">with a client</text>
-  <g class="n mp"><rect x="400" y="1050" width="260" height="56" rx="4"/><text class="t" x="530" y="1073" text-anchor="middle">Waiting on me + wizard</text><text class="d" x="530" y="1091" text-anchor="middle">store, secrets, deploy, access: guided, done by a human</text><text class="b" x="652" y="1062" text-anchor="end">MP</text></g>
+  <g class="n mp"><rect x="400" y="1050" width="260" height="56" rx="4"/><text class="t" x="530" y="1073" text-anchor="middle">Owner steps + wizard</text><text class="d" x="530" y="1091" text-anchor="middle">store, secrets, deploy, access: guided, done by a human</text><text class="b" x="652" y="1062" text-anchor="end">MP</text></g>
   <g class="n sp"><rect x="710" y="1050" width="260" height="56" rx="4"/><text class="t" x="840" y="1073" text-anchor="middle">writing-skills + writing-for-agents</text><text class="d" x="840" y="1091" text-anchor="middle">lessons go into CLAUDE.md and skills</text><text class="b" x="962" y="1062" text-anchor="end">SP+MP</text></g>
   <line class="ln" x1="530" y1="1016" x2="530" y2="1048" marker-end="url(#a)"/>
   <polyline class="ln" points="840,1016 840,1032 600,1032 600,1048" marker-end="url(#a)"/>
