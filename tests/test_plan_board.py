@@ -4,6 +4,8 @@ python3 -m unittest tests/test_plan_board.py
 """
 import importlib.util
 import json
+import subprocess
+import tempfile
 import threading
 import unittest
 from pathlib import Path
@@ -69,6 +71,169 @@ class ParsePlan(unittest.TestCase):
         self.assertEqual(board["tasks"], [])
 
 
+class BodyAndDepends(unittest.TestCase):
+    TEXT = ("# P\n\n### Task 1: A\n\n- [x] one\n\n### Task 2: B\n\nDepends on: Task 1 and Task 3 (not Task 2)\n\n"
+            "```text\n### Task 9: fenced\n```\n\n- [ ] two\n\n## Notes\n\ntrailing\n")
+
+    def test_body_keeps_raw_lines_and_fences(self):
+        tasks = pb.parse_plan(self.TEXT)["tasks"]
+        self.assertEqual(tasks[0]["body"], "- [x] one")
+        self.assertEqual(tasks[1]["body"],
+                         "Depends on: Task 1 and Task 3 (not Task 2)\n\n```text\n### Task 9: fenced\n```\n\n- [ ] two")
+
+    def test_depends_skips_own_number(self):
+        tasks = pb.parse_plan(self.TEXT)["tasks"]
+        self.assertEqual(tasks[0]["depends"], [])
+        self.assertEqual(tasks[1]["depends"], [1, 3])
+
+
+def task(number, title, ticks=()):
+    return {"number": number, "title": title, "steps": [{"text": "s", "done": t} for t in ticks]}
+
+
+def worktree(branch, ahead=0, dirty=False):
+    return {"path": "/wt/" + branch.rsplit("/", 1)[-1], "branch": branch, "ahead": ahead, "dirty": dirty}
+
+
+def pr(number, title, state="OPEN", head="other", body=""):
+    return {"number": number, "title": title, "state": state, "url": "https://example.test/pr/%d" % number,
+            "headRefName": head, "body": body}
+
+
+class Matching(unittest.TestCase):
+    def test_slug_and_branch_key(self):
+        self.assertEqual(pb.slug("  completeTodo: Sets *done* "), "completetodo-sets-done")
+        self.assertEqual(pb.branch_key("claude/complete-todo-3fa2c1"), "complete-todo")
+        self.assertEqual(pb.branch_key("feature/complete-todo"), "complete-todo")
+
+    def test_pr_body_names_the_task(self):
+        live = pb.match_tasks([task(2, "completeTodo")], [], [pr(7, "Add it", body="### Task 2: completeTodo\n...")])
+        self.assertEqual(live[2]["pr"]["number"], 7)
+
+    def test_pr_title_slug(self):
+        live = pb.match_tasks([task(1, "Empty title throws")], [], [pr(3, "Empty title throws!")])
+        self.assertEqual(live[1]["pr"]["number"], 3)
+
+    def test_branch_key_prefix_and_worktree(self):
+        tasks = [task(1, "createTodo and listTodos"), task(2, "completeTodo sets done")]
+        live = pb.match_tasks(tasks, [worktree("claude/completetodo-sets-ab12cd", ahead=2)], [])
+        self.assertIsNone(live[1])
+        self.assertEqual(live[2]["branch"], "claude/completetodo-sets-ab12cd")
+        self.assertEqual(live[2]["ahead"], 2)
+        self.assertIsNone(live[2]["pr"])
+
+    def test_ambiguous_key_matches_nothing(self):
+        tasks = [task(1, "Export invoices as CSV"), task(2, "Export invoices as PDF")]
+        live = pb.match_tasks(tasks, [worktree("claude/export-invoices-ab12cd", ahead=1)], [])
+        self.assertEqual(live, {1: None, 2: None})
+
+    def test_short_key_needs_equal_slug(self):
+        live = pb.match_tasks([task(1, "Fix login flow")], [worktree("claude/fix-ab12cd", ahead=1)], [])
+        self.assertIsNone(live[1])
+
+    def test_open_beats_merged_and_closed_is_ignored(self):
+        prs = [pr(1, "Task 1: A", "MERGED"), pr(2, "Task 1: A", "OPEN", head="claude/a-x"), pr(3, "Task 1: A", "CLOSED")]
+        live = pb.match_tasks([task(1, "A")], [worktree("claude/a-x", ahead=1)], prs)
+        self.assertEqual(live[1]["pr"]["number"], 2)
+        self.assertEqual(live[1]["worktree"], "/wt/a-x")
+        live = pb.match_tasks([task(1, "A")], [], [pr(3, "Task 1: A", "CLOSED")])
+        self.assertIsNone(live[1])
+
+
+class ResolveStatus(unittest.TestCase):
+    def live(self, ahead=0, dirty=False, state=None):
+        return {"branch": "b", "worktree": "/wt", "ahead": ahead, "dirty": dirty,
+                "pr": {"number": 1, "state": state, "url": "u", "title": "t"} if state else None}
+
+    def test_table(self):
+        steps_none = [{"done": False}, {"done": False}]
+        steps_some = [{"done": True}, {"done": False}]
+        steps_all = [{"done": True}, {"done": True}]
+        self.assertEqual(pb.resolve_status(steps_all, self.live(state="OPEN")), "done")
+        self.assertEqual(pb.resolve_status(steps_none, self.live(state="MERGED")), "done")
+        self.assertEqual(pb.resolve_status(steps_none, self.live(state="OPEN")), "review")
+        self.assertEqual(pb.resolve_status(steps_some, None), "in_progress")
+        self.assertEqual(pb.resolve_status(steps_none, self.live(ahead=1)), "in_progress")
+        self.assertEqual(pb.resolve_status(steps_none, self.live(dirty=True)), "in_progress")
+        self.assertEqual(pb.resolve_status(steps_none, self.live()), "backlog")
+        self.assertEqual(pb.resolve_status([], None), "backlog")
+
+
+PLAN_TEXT = "# Demo\n\n### Task 1: Write the parser\n\n- [ ] one\n\n### Task 2: Task two title\n\n- [ ] two\n"
+
+
+def git(cwd, *args):
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.test", *args],
+                   cwd=cwd, check=True, capture_output=True)
+
+
+class GitSource(unittest.TestCase):
+    def test_worktree_with_a_commit_is_in_progress(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            plans = repo / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            (plans / "2026-10-21-demo.md").write_text(PLAN_TEXT, encoding="utf-8")
+            git(repo, "init", "-q", "-b", "main")
+            git(repo, "add", ".")
+            git(repo, "commit", "-q", "-m", "plan")
+            wt = Path(tmp) / "wt"
+            git(repo, "worktree", "add", "-q", "-b", "claude/task-two-title-abc123", str(wt))
+            (wt / "two.txt").write_text("2\n", encoding="utf-8")
+            git(wt, "add", ".")
+            git(wt, "commit", "-q", "-m", "two")
+
+            data = {"git": pb.read_git(repo), "prs": None}
+            self.assertEqual(data["git"]["default"], "main")
+            board = pb.load_board(repo, data=data)
+            self.assertEqual(board["sources"], {"git": True, "prs": False, "default": "main"})
+            self.assertEqual([t["status"] for t in board["tasks"]], ["backlog", "in_progress"])
+            self.assertEqual(board["tasks"][1]["live"]["ahead"], 1)
+            self.assertFalse(board["tasks"][1]["live"]["dirty"])
+            self.assertEqual(board["tasks"][1]["plan_status"], "backlog")
+
+    def test_not_a_repository_top_level(self):
+        self.assertIsNone(pb.read_git(FIXTURE))
+
+
+class EventStream(unittest.TestCase):
+    def test_first_event_then_one_per_change(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plans = root / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            plan = plans / "2026-10-21-demo.md"
+            plan.write_text(PLAN_TEXT, encoding="utf-8")
+            live = pb.Live(root, git=False, prs=False, plan_every=0.05)
+            server = pb.make_server(root, 0, live=live)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                stream = urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/events", timeout=5)
+                self.assertTrue(stream.headers.get("Content-Type", "").startswith("text/event-stream"))
+                first = read_event(stream)
+                self.assertEqual([t["status"] for t in first["tasks"]], ["backlog", "backlog"])
+                plan.write_text(PLAN_TEXT.replace("- [ ] one", "- [x] one"), encoding="utf-8")
+                second = read_event(stream)
+                self.assertEqual([t["status"] for t in second["tasks"]], ["done", "backlog"])
+                stream.close()
+            finally:
+                server.shutdown()
+                server.server_close()
+
+
+def read_event(stream):
+    """The JSON of the next `event: board` on an open SSE response."""
+    event, data = None, []
+    while True:
+        line = stream.readline().decode("utf-8").rstrip("\n")
+        if line.startswith("event: "):
+            event = line[7:]
+        elif line.startswith("data: "):
+            data.append(line[6:])
+        elif line == "" and event == "board" and data:
+            return json.loads("\n".join(data))
+
+
 class PickPlan(unittest.TestCase):
     def test_newest_with_open_step_wins(self):
         self.assertEqual(pb.pick_plan([("2026-10-02-b.md", False), ("2026-10-01-a.md", True)]), "2026-10-01-a.md")
@@ -111,7 +276,7 @@ class LoadBoard(unittest.TestCase):
 class Server(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = pb.make_server(FIXTURE, 0)
+        cls.server = pb.make_server(FIXTURE, 0, live=pb.Live(FIXTURE, git=False, prs=False))
         cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -140,7 +305,7 @@ class Server(unittest.TestCase):
     def test_healthz(self):
         status, _, body = self.get("/healthz")
         self.assertEqual(status, 200)
-        self.assertEqual(json.loads(body), {"root": str(FIXTURE.resolve())})
+        self.assertEqual(json.loads(body), {"root": str(FIXTURE.resolve()), "api": pb.API})
         self.assertEqual(pb.healthz(self.port), str(FIXTURE.resolve()))
 
     def test_page(self):
@@ -149,9 +314,9 @@ class Server(unittest.TestCase):
         self.assertTrue(ctype.startswith("text/html"))
         html = body.decode("utf-8")
         self.assertIn("<!doctype html>", html.lower())
-        for heading in ("Backlog", "In progress", "Done"):
+        for heading in ("Backlog", "In progress", "Review", "Done"):
             self.assertIn(heading, html)
-        self.assertIn("/api/board", html)
+        self.assertIn("/api/events", html)
         self.assertIn("no plan found under docs/superpowers/plans", html)
 
     def test_not_found(self):
@@ -172,7 +337,7 @@ class Main(unittest.TestCase):
         self.assertIn("root is not a directory", err.getvalue())
 
     def test_healthz_without_server_is_none(self):
-        probe = pb.make_server(FIXTURE, 0)
+        probe = pb.make_server(FIXTURE, 0, live=pb.Live(FIXTURE, git=False, prs=False))
         free_port = probe.server_address[1]
         probe.server_close()
         self.assertIsNone(pb.healthz(free_port))

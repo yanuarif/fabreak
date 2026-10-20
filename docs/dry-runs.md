@@ -113,3 +113,17 @@ Change, recorded in `docs/superpowers/specs/2026-10-18-design-step-design.md`: a
 Date: 2026-10-18. CONTRIBUTING.md keeps `skills/fabreak/SKILL.md` under 1,500 tokens, estimated as words × 1.4. The router was already over at 0.4.2 (1,118 words, about 1,565 tokens) and the design step's mechanism line took it to 1,127 words (about 1,578).
 
 Change: text that one entry or one mechanism owns left the router, with a pointer in its place. The wizard's parking message (stage list and `tee` run command) moved to board.md, Wizard; the stale-plan question moved to board.md, Cards; the question for `feature` named without `CONTEXT.md` moved to the feature entry's When section. The routing rows lost the held-card note that board.md, Held cards, already gives and the list of entries that run without `CONTEXT.md`, which "Entry named: that entry" already implies. No rule changed. The router is 1,018 words, about 1,425 tokens. Version 0.5.1.
+
+## Changes: no sidebar board, optional CI
+
+Date: 2026-10-21. The owner asked to remove the sidebar board and to make writing CI optional.
+
+Change, recorded in the fabreak design spec's 2026-10-21 changes: board.md keeps the card round, tier, brief, held cards, merge report and plan board, and drops the sidebar sections and every move; a new State section says where per-card state is read. `bootstrap` asks whether to write CI; without it, the local suite run stands in for CI green in loop step 6, `release` and branch protection. Version 0.6.0. Untested until the next live run: a plan's cards without any sidebar call, and a `bootstrap` that answers "no CI".
+
+## Changes: a live, interactive plan board
+
+Date: 2026-10-21. The owner asked for `/fabreak:board` to be more realtime and interactive, and chose push over polling, four columns from the plan, git and PRs, every proposed interaction, and a board that still writes nothing.
+
+Change, recorded in `docs/superpowers/specs/2026-10-21-live-board-design.md`: a poller thread in `scripts/plan-board.py` watches the plan files (0.5 s), the worktrees (3 s) and the PRs through `gh` (30 s), and `/api/events` pushes the board to the page over Server-Sent Events. A task is Review while its PR is open and Done once it merges or every step is ticked; a worktree on its branch with a commit or an uncommitted change makes it In progress. The page adds a card detail panel, search and column chips kept in the URL, a flash and an activity line per change, and keyboard navigation. `/healthz` reports `api: 2`, so the command replaces a server from an older version. Version 0.7.0.
+
+Checked in the preview pane against a temporary repository with two task worktrees: ticking a step in the plan and adding a worktree with an uncommitted file moved both cards within about a second, each with a flash and an activity line; stopping the server showed "Reconnecting" and restarting it returned to "Live" without a reload; the detail panel, arrow keys, Enter, Esc, search, column chips and the URL state worked; at 375 px wide the page had no horizontal scroll. `gh` listed this repository's PRs in about a second. Untested: a real card's branch name matching its task, and a PR open on a plan task.
