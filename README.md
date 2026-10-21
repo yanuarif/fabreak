@@ -66,7 +66,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Verification evidence is command output: the test runner's summary line and exit code, printed verbatim.
 - Steps only a human can take (secrets, deploys, store consoles, branch protection, access) run through a wizard and stop the session until the owner reports them done.
 - A question stops the session, never a guess, and the message alone answers it: an interview round (grilling, brainstorming, spec approval) is plain chat, a discrete choice uses the app's question tool, and the closing box's buttons are kept for git go-aheads.
-- The plan in git is the durable record, edited by the orchestrator only: tasks are ticked when their PR merges; replans, archived spikes and wrong task splits are recorded there. A task session reports plan findings in its PR body under "For the plan".
+- The plan in git is the durable record, edited by the orchestrator only: tasks are ticked when their PR merges, each with a `Metrics:` line (lead, work, review rounds, load-bearing findings, tier); replans, archived spikes and wrong task splits are recorded there. A task session reports plan findings in its PR body under "For the plan".
 
 ## How a plan runs
 
@@ -83,6 +83,7 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - A task's column comes from three sources: its steps, the worktree on its branch (a commit past the default branch or an uncommitted change is In progress) and its PR (open is Review, merged is Done). PR state needs `gh` and a GitHub remote.
 - Steps are read from the plan, from the plan's copy in the task's worktree, and from the progress file the task session keeps in its worktree's private git folder, so a card in flight shows its steps as they happen. Markers: `- [ ]` open, `- [/]` in progress, `- [x]` done, `- [-]` skipped.
 - A branch belongs to a task by its title or by its number (`03-editor`, `task-3`).
+- Each card shows its metrics: model tier, review rounds, load-bearing findings, lead time (card start to merge) and work time (first step to merge). They come from the plan's `Metrics:` line once the task is ticked, and live from the progress file before that. The header sums them for the plan: Done count, median lead and work, review rounds, load-bearing findings and tier mix.
 - Changes reach the page over Server-Sent Events. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. The page has search (`/`), column filters, keyboard navigation, a plan picker when there are several plans, and an activity log.
 - The server listens on 127.0.0.1 only, on a port derived from the repository path, and writes nothing. It stops when the session that started it ends, or from the page's Stop button.
 
@@ -96,7 +97,7 @@ skills/fabreak/loop.md       loop C: worktree, implement, verify, review, finish
 skills/fabreak/design.md     the design step: screens on a Claude Design canvas, approved before the spec
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection
 skills/board/SKILL.md        the /fabreak:board command: starts the plan board and opens it in the preview pane
-scripts/plan-board.py        the plan board server: plan ticks, worktrees and PRs pushed live to one read-only page, 127.0.0.1
+scripts/plan-board.py        the plan board server: plan ticks, metrics, worktrees and PRs pushed live to one read-only page, 127.0.0.1
 tests/                       fixtures for dry runs, shell tests, plan board unit tests
 scripts/task-worktree.sh     router state check 4: is this checkout a task worktree
 ```

@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shutil
+import statistics
 import subprocess
 import sys
 import threading
@@ -37,7 +38,9 @@ DEPENDS_RE = re.compile(r"depends on", re.IGNORECASE)
 TASK_REF_RE = re.compile(r"\bTask (\d+)\b")
 HEX_TAIL_RE = re.compile(r"-[0-9a-f]{6}$")
 NUMBER_RE = re.compile(r"^(?:task-?)?0*(\d+)(?:-|$)", re.IGNORECASE)
-API = 4
+METRICS_RE = re.compile(r"^Metrics:\s*(.*)$")
+DURATION_RE = re.compile(r"^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?$")
+API = 5
 GIT_TIMEOUT = 5
 GH_TIMEOUT = 15
 PING_EVERY = 15
@@ -73,6 +76,33 @@ def trim_blank(lines):
     return lines
 
 
+def parse_duration(text):
+    """Minutes in `2d3h`, `3h10m`, `45m` or `0m`, or None."""
+    m = DURATION_RE.match(text)
+    if not text or not m:
+        return None
+    days, hours, minutes = (int(g or 0) for g in m.groups())
+    return days * 1440 + hours * 60 + minutes
+
+
+def parse_metrics(text):
+    """The known keys of a `Metrics:` line's text; unknown keys and bad values are left out."""
+    metrics = {}
+    for part in text.split("·"):
+        key, _, value = part.strip().partition(" ")
+        value = value.strip()
+        if key in ("lead", "work"):
+            minutes = parse_duration(value)
+            if minutes is not None:
+                metrics[key] = minutes
+        elif key in ("review", "load-bearing"):
+            if value.isdigit():
+                metrics[key.replace("-", "_")] = int(value)
+        elif key in ("tier", "started", "began") and value:
+            metrics[key] = value
+    return metrics
+
+
 def parse_plan(text):
     """Title, goal and tasks of one plan. Fenced code blocks hold no steps or headings."""
     title = ""
@@ -98,7 +128,8 @@ def parse_plan(text):
                 continue
         m = TASK_RE.match(line)
         if m:
-            current = {"number": int(m.group(1)), "title": m.group(2), "steps": [], "depends": None, "lines": []}
+            current = {"number": int(m.group(1)), "title": m.group(2), "steps": [], "depends": None, "metrics": None,
+                       "lines": []}
             tasks.append(current)
             continue
         if HEADING_RE.match(line):
@@ -109,6 +140,9 @@ def parse_plan(text):
         current["lines"].append(line)
         if current["depends"] is None and DEPENDS_RE.search(line):
             current["depends"] = [int(n) for n in TASK_REF_RE.findall(line)]
+        m = METRICS_RE.match(line)
+        if m and current["metrics"] is None:
+            current["metrics"] = parse_metrics(m.group(1))
         m = STEP_RE.match(line)
         if m:
             state = MARKS[m.group(1)]
@@ -360,8 +394,34 @@ def load_board(root, name=None, data=None):
             if mine is not None and mine["steps"]:
                 task["steps"] = merge_steps(task["steps"], mine["steps"])
                 task["steps_from"] = "progress"
+            if task["metrics"]:
+                task["metrics"] = {**task["metrics"], "source": "plan"}
+            elif mine is not None and mine["metrics"]:
+                task["metrics"] = {**mine["metrics"], "source": "live"}
+            else:
+                task["metrics"] = None
             task["status"] = resolve_status(task["steps"], task["live"])
+    board["summary"] = summarize(board["tasks"])
     return board
+
+
+def summarize(tasks):
+    """Counts, medians and sums of the tasks' metrics for the header strip."""
+    measured = [t["metrics"] for t in tasks if t.get("metrics")]
+    final = [m for m in measured if m["source"] == "plan"]
+    tiers = {}
+    for m in measured:
+        if "tier" in m:
+            tiers[m["tier"]] = tiers.get(m["tier"], 0) + 1
+
+    def median(key):
+        values = [m[key] for m in final if key in m]
+        return statistics.median_low(values) if values else None
+
+    return {"tasks": len(tasks), "done": sum(t["status"] == "done" for t in tasks), "measured": len(final),
+            "lead": median("lead"), "work": median("work"),
+            "review": sum(m.get("review", 0) for m in measured),
+            "load_bearing": sum(m.get("load_bearing", 0) for m in measured), "tiers": tiers}
 
 
 class Live:
@@ -458,6 +518,9 @@ PAGE = r"""<!doctype html>
   header .repo { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   header h1 { font-size: 16px; margin: 0; font-weight: 600; }
   header .goal { color: var(--muted); margin: 4px 0 0; }
+  #summary { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+  #summary b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  #summary:empty { display: none; }
   header select { margin-left: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
   .live { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
   .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--backlog); }
@@ -511,6 +574,10 @@ PAGE = r"""<!doctype html>
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .warn { color: var(--warn); border-color: currentColor; }
   .pr-open { color: var(--review); border-color: currentColor; } .pr-merged { color: var(--done); border-color: currentColor; }
+  .metrics { margin-top: 4px; }
+  .metrics .badge { background: var(--soft); border-color: transparent; font-variant-numeric: tabular-nums; }
+  .metrics .badge.warn { background: none; border-color: currentColor; }
+  .metrics .running { background: none; border: 1px dashed var(--progress); }
   .empty { grid-column: 1 / -1; color: var(--muted); padding: 24px 0; text-align: center; }
   .errors { grid-column: 1 / -1; color: var(--progress); font-size: 12px; }
   #detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel);
@@ -552,6 +619,7 @@ PAGE = r"""<!doctype html>
     <button type="button" id="stop" title="Stop the board server">Stop</button>
   </div>
   <p class="goal" id="goal"></p>
+  <p id="summary" aria-label="Plan metrics"></p>
   <div class="tools">
     <input id="search" type="search" placeholder="Search tasks and steps" aria-label="Search tasks and steps">
     <div id="chips" role="group" aria-label="Columns">
@@ -579,6 +647,32 @@ PAGE = r"""<!doctype html>
   function stepState(s) { return s.state || (s.done ? "done" : "open"); }
   function stepItem(s) {
     const li = el("li", stepState(s)); li.appendChild(el("span", "box")); li.appendChild(el("span", "", s.text)); return li;
+  }
+  function fmt(minutes) {
+    const parts = [[Math.floor(minutes / 1440), "d"], [Math.floor(minutes / 60) % 24, "h"], [minutes % 60, "m"]]
+      .filter(function (p) { return p[0] > 0; }).slice(0, 2);
+    return parts.length ? parts.map(function (p) { return p[0] + p[1]; }).join("") : "0m";
+  }
+  function since(iso) {
+    const t = Date.parse(iso);
+    return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / 60000));
+  }
+  function durations(m) {
+    if (m.source === "plan") return { lead: m.lead, work: m.work, running: false };
+    return { lead: m.started ? since(m.started) : null, work: m.began ? since(m.began) : null, running: true };
+  }
+  function shortTier(tier) { return tier.replace(/^claude-/, ""); }
+  function metricChips(m) {
+    const row = el("div", "badges metrics");
+    const d = durations(m);
+    function chip(text, cls, title) { const b = el("span", "badge" + (cls ? " " + cls : ""), text); if (title) b.title = title; row.appendChild(b); }
+    if (m.tier) chip(shortTier(m.tier), "mono", "model " + m.tier);
+    if (m.review !== undefined) chip("review " + m.review, "", m.review + " review round" + (m.review === 1 ? "" : "s"));
+    if (m.load_bearing !== undefined) chip(m.load_bearing + " load-bearing", m.load_bearing > 0 ? "warn" : "");
+    const live = d.running ? " so far, from the session" : "";
+    if (d.lead !== null && d.lead !== undefined) chip("lead " + fmt(d.lead), d.running ? "running" : "", "card start to merge" + live);
+    if (d.work !== null && d.work !== undefined) chip("work " + fmt(d.work), d.running ? "running" : "", "first step to merge" + live);
+    return row;
   }
   const EMPTY = "no plan found under docs/superpowers/plans";
   const params = new URLSearchParams(location.search);
@@ -668,6 +762,9 @@ PAGE = r"""<!doctype html>
         const op = o.live && o.live.pr, np = t.live && t.live.pr;
         if (np && (!op || op.number !== np.number || op.state !== np.state)) lines.push("PR #" + np.number + " " + (PR_WORDS[np.state] || np.state.toLowerCase()));
         if (t.live && t.live.branch && !(o.live && o.live.branch)) lines.push("branch " + t.live.branch);
+        const om = o.metrics || {}, nm = t.metrics || {};
+        if (nm.source === "plan" && om.source !== "plan") lines.push("metrics recorded in the plan");
+        else if (nm.review > 0 && nm.review !== om.review) lines.push("review round " + nm.review);
       }
       if (lines.length) {
         flash.add(t.number);
@@ -715,7 +812,26 @@ PAGE = r"""<!doctype html>
     if (L && L.pr) badges.appendChild(el("span", "badge pr-" + L.pr.state.toLowerCase(), "#" + L.pr.number + " " + L.pr.state.toLowerCase()));
     if (t.depends && t.depends.length) badges.appendChild(el("span", "badge", "after " + t.depends.join(", ")));
     if (badges.childNodes.length) a.appendChild(badges);
+    if (t.metrics) a.appendChild(metricChips(t.metrics));
     return a;
+  }
+
+  function renderSummary(b) {
+    const p = $("summary");
+    p.replaceChildren();
+    const s = b.summary;
+    if (!b.plan || !s) return;
+    function item(value, label) {
+      const span = el("span"); span.appendChild(el("b", "", value)); span.appendChild(document.createTextNode(" " + label)); p.appendChild(span);
+    }
+    item(s.done + "/" + s.tasks, "done");
+    const tiers = Object.keys(s.tiers);
+    if (!s.measured && !tiers.length && !s.review && !s.load_bearing) return;
+    if (s.lead !== null) item(fmt(s.lead), "median lead");
+    if (s.work !== null) item(fmt(s.work), "median work");
+    item(String(s.review), "review round" + (s.review === 1 ? "" : "s"));
+    item(String(s.load_bearing), "load-bearing");
+    if (tiers.length) p.appendChild(el("span", "", tiers.map(function (k) { return shortTier(k) + " ×" + s.tiers[k]; }).join(" · ")));
   }
 
   function render() {
@@ -724,6 +840,7 @@ PAGE = r"""<!doctype html>
     $("repo").textContent = b.root.split("/").pop();
     $("title").textContent = b.title || b.plan || "";
     $("goal").textContent = b.goal || "";
+    renderSummary(b);
     document.title = (b.title ? b.title + " · " : "") + "Plan board";
 
     const select = $("plans");
@@ -805,6 +922,16 @@ PAGE = r"""<!doctype html>
       fact("PR", a);
     }
     if (!L) fact("Git", state.board.sources && state.board.sources.git ? "no branch or PR matched" : "not read");
+    const M = t.metrics;
+    if (M) {
+      const d = durations(M), so = d.running ? " so far" : "";
+      fact("Metrics", M.source === "plan" ? "from the plan" : "live from the session");
+      if (d.lead !== null && d.lead !== undefined) fact("Lead", fmt(d.lead) + so);
+      if (d.work !== null && d.work !== undefined) fact("Work", fmt(d.work) + so);
+      if (M.review !== undefined) fact("Review rounds", String(M.review));
+      if (M.load_bearing !== undefined) fact("Load-bearing", String(M.load_bearing));
+      if (M.tier) fact("Tier", M.tier);
+    }
     body.appendChild(dl);
 
     if (t.steps.length) {
@@ -914,6 +1041,9 @@ PAGE = r"""<!doctype html>
     if (e.key.indexOf("Arrow") === 0) { e.preventDefault(); move(current, e.key); }
   });
 
+  setInterval(function () {
+    if (state.board && state.board.tasks.some(function (t) { return t.metrics && t.metrics.source === "live"; })) render();
+  }, 60000);
   renderLog();
   connect();
 })();

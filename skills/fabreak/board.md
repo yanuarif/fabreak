@@ -21,7 +21,8 @@ One plan task becomes one card: a task session the orchestrator starts. Every un
 5. The git permissions the owner gave in the card round: commit on the branch; push and open the PR or MR; merge. What is not listed stops the session with a question (SKILL.md rule).
 6. The tasks this one depends on, by title, and this card's state: **run** when every dependency is ticked in the plan and fewer than three cards run, otherwise **held**. At most three cards run at once; a running card is a session of this plan that has not merged and is not held.
 7. The orchestrator's session id, from `get_session "self"`, for the merge report (Done).
-8. The card's tier and its reason, one line: "Tier: cheaper, mechanical: <the files the plan names>" or "Tier: orchestrator's, <the design choice left>".
+8. The card's tier, its model id and its reason, one line: "Tier: cheaper (<model id>), mechanical: <the files the plan names>" or "Tier: orchestrator's (<model id>), <the design choice left>".
+9. `Started: <time>`: one `date -u +%Y-%m-%dT%H:%MZ` the orchestrator runs before the round's first start, the same for every card of the round. The card's lead time counts from it (loop.md, Metrics).
 
 `background` carries the project in two or three sentences and the rules for every entry from SKILL.md.
 
@@ -43,13 +44,13 @@ A step only a human can take runs through mattpocock-skills:wizard and stops the
 
 When a PR or MR merges:
 
-1. The task session, at the end of loop.md step 6: the merge report to the orchestrator, "Merged: <task title>, <PR or MR URL>" (`SendMessage` to brief item 7). Archiving the card session later removes its worktree; nothing in the loop deletes it.
-2. The orchestrator, on the report (or when the app continues it because its cards are idle), when the card came from a plan: `git pull --ff-only` on the default branch, tick the task (`- [x]`) and commit the plan: "Tick <task title>". For an entry without a plan the merged PR or MR is the record.
+1. The task session, at the end of loop.md step 6: the merge report to the orchestrator, "Merged: <task title>, <PR or MR URL>. Metrics: lead … · work … · review … · load-bearing … · tier …" (`SendMessage` to brief item 7). Archiving the card session later removes its worktree; nothing in the loop deletes it.
+2. The orchestrator, on the report (or when the app continues it because its cards are idle), when the card came from a plan: `git pull --ff-only` on the default branch, tick the task (`- [x]`), copy the report's `Metrics:` line verbatim under the task's last step after one blank line, and commit the plan: "Tick <task title>". A report without the line gets one question to the card session for it before the commit. For an entry without a plan the merged PR or MR is the record.
 3. The orchestrator wakes held cards (Held cards): in plan order, every held card whose dependencies are all ticked, while fewer than three cards run. Done when every task is ticked or has a running or held card.
 
 ## Plan board
 
-In the desktop app, "Show the board" opens the plan board: a live, read-only page of the plan's tasks in Backlog, In progress, Review and Done. A task's column comes from its steps, the worktree on its branch (a commit past the default branch, an uncommitted change, or a step ticked in the worktree's own copy of the plan or in the session's progress file, loop.md step 2, is In progress) and its PR (open is Review, merged is Done; `gh`, GitHub only), and the page updates as any of them changes. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. A branch belongs to a task by its title or by its number (`03-editor`, `task-3`); a number counts only for a worktree that holds this plan. Besides `- [ ]` and `- [x]`, the board reads `- [/]` as a step being worked on and `- [-]` as a skipped step. The board stops when the session that started it ends, or from its Stop button. Run the steps of the `board` command, `${CLAUDE_PLUGIN_ROOT}/skills/board/SKILL.md`. Done when the pane shows the board.
+In the desktop app, "Show the board" opens the plan board: a live, read-only page of the plan's tasks in Backlog, In progress, Review and Done. A task's column comes from its steps, the worktree on its branch (a commit past the default branch, an uncommitted change, or a step ticked in the worktree's own copy of the plan or in the session's progress file, loop.md step 2, is In progress) and its PR (open is Review, merged is Done; `gh`, GitHub only), and the page updates as any of them changes. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. A branch belongs to a task by its title or by its number (`03-editor`, `task-3`); a number counts only for a worktree that holds this plan. Besides `- [ ]` and `- [x]`, the board reads `- [/]` as a step being worked on and `- [-]` as a skipped step. Each card shows its metrics as chips: from the plan's `Metrics:` line once the task is ticked, live from the session's progress file before that; the header sums them for the plan (Done count, median lead and work, review rounds, load-bearing findings, tier mix). The board stops when the session that started it ends, or from its Stop button. Run the steps of the `board` command, `${CLAUDE_PLUGIN_ROOT}/skills/board/SKILL.md`. Done when the pane shows the board.
 
 ## CLI fallback
 
@@ -59,5 +60,5 @@ Without the preview pane (plain `claude` in a terminal), print the board as text
 Backlog       - [ ] tasks with no open PR or MR whose worktree is missing or has no commit past the default branch (held cards)
 In progress   - [ ] tasks whose branch has commits past the default branch and no PR or MR
 Review        - [ ] tasks whose branch has an open PR or MR
-Done          - [x] tasks
+Done          - [x] tasks, each with its Metrics: line
 ```
