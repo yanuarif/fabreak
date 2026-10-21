@@ -4,8 +4,9 @@
 Usage: plan-board.py [--root DIR] [--port N] [--verbose]
 
 Serves one page on 127.0.0.1 that shows every task of a plan in Backlog,
-In progress, Review or Done, from the plan's ticked steps, the repository's
-worktrees (git) and its pull requests (gh, when present). A poller thread
+In progress, Review or Done, from the plan's steps (ticked in the plan or
+in the task's own worktree), the repository's worktrees (git) and its pull
+requests (gh, when present). A poller thread
 watches all three and pushes each change to the page over Server-Sent
 Events. Writes nothing. Standard library only.
 """
@@ -25,13 +26,16 @@ from urllib.request import urlopen
 
 PLAN_DIR = Path("docs") / "superpowers" / "plans"
 TASK_RE = re.compile(r"^### Task (\d+): (.+?)\s*$")
-STEP_RE = re.compile(r"^- \[([ xX])\] (.*)$")
+STEP_RE = re.compile(r"^- \[([ xX/-])\] (.*)$")
+MARKS = {" ": "open", "/": "doing", "x": "done", "X": "done", "-": "skipped"}
+RANK = {"open": 0, "doing": 1, "skipped": 2, "done": 3}
 HEADING_RE = re.compile(r"^#{2,3} ")
 GOAL_RE = re.compile(r"\*\*Goal:\*\*\s*(.*)")
 DEPENDS_RE = re.compile(r"depends on", re.IGNORECASE)
 TASK_REF_RE = re.compile(r"\bTask (\d+)\b")
 HEX_TAIL_RE = re.compile(r"-[0-9a-f]{6}$")
-API = 2
+NUMBER_RE = re.compile(r"^(?:task-?)?0*(\d+)(?:-|$)", re.IGNORECASE)
+API = 3
 GIT_TIMEOUT = 5
 GH_TIMEOUT = 15
 PING_EVERY = 15
@@ -42,13 +46,21 @@ def port_for(root):
     return 7800 + zlib.crc32(str(Path(root).resolve()).encode("utf-8")) % 100
 
 
+def step_state(step):
+    return step.get("state") or ("done" if step["done"] else "open")
+
+
+def is_open(step):
+    return step_state(step) in ("open", "doing")
+
+
 def status_for(steps):
-    done = sum(1 for s in steps if s["done"])
-    if done == 0:
-        return "backlog"
-    if done == len(steps):
+    states = [step_state(s) for s in steps]
+    if steps and all(st in ("done", "skipped") for st in states):
         return "done"
-    return "in_progress"
+    if any(st in ("done", "doing") for st in states):
+        return "in_progress"
+    return "backlog"
 
 
 def trim_blank(lines):
@@ -97,8 +109,9 @@ def parse_plan(text):
             current["depends"] = [int(n) for n in TASK_REF_RE.findall(line)]
         m = STEP_RE.match(line)
         if m:
+            state = MARKS[m.group(1)]
             current["steps"].append({"text": m.group(2).replace("**", "").strip(),
-                                     "done": m.group(1) in "xX"})
+                                     "done": state == "done", "state": state})
     for task in tasks:
         task["status"] = status_for(task["steps"])
         task["body"] = "\n".join(trim_blank(task.pop("lines")))
@@ -116,9 +129,27 @@ def branch_key(branch):
     return slug(HEX_TAIL_RE.sub("", branch.rsplit("/", 1)[-1]))
 
 
-def match_tasks(tasks, worktrees, prs):
-    """{task number: live info or None}, from the repository's worktrees and PRs."""
+def branch_number(branch):
+    """The task number a branch names in its last segment (`02-capture`, `task-7`), or None."""
+    m = NUMBER_RE.match(branch.rsplit("/", 1)[-1])
+    return int(m.group(1)) if m else None
+
+
+def match_tasks(tasks, worktrees, prs, plan=None):
+    """{task number: live info or None}, from the repository's worktrees and PRs.
+
+    A worktree whose branch names a task number matches that task only when its
+    checkout holds `plan`, so branches cut for an earlier plan stay out."""
     slugs = {t["number"]: slug(t["title"]) for t in tasks}
+
+    def numbered(n):
+        hits = [w for w in worktrees if branch_number(w["branch"]) == n and plan in (w.get("plans") or {})]
+        return hits[0] if len(hits) == 1 else None
+
+    def branch_pr(branch):
+        found = sorted((p for p in prs or [] if p.get("headRefName") == branch and p.get("state") in ("OPEN", "MERGED")),
+                       key=lambda p: p["state"] != "OPEN")
+        return found[0] if found else None
 
     def owner(branch):
         key = branch_key(branch or "")
@@ -139,7 +170,9 @@ def match_tasks(tasks, worktrees, prs):
         pr = found[0] if found else None
         wt = by_branch.get(pr.get("headRefName")) if pr else None
         if wt is None:
-            wt = next((w for w in worktrees if owner(w["branch"]) == n), None)
+            wt = next((w for w in worktrees if owner(w["branch"]) == n), None) or numbered(n)
+            if pr is None and wt is not None:
+                pr = branch_pr(wt["branch"])
         if pr is None and wt is None:
             out[n] = None
             continue
@@ -154,15 +187,28 @@ def match_tasks(tasks, worktrees, prs):
 
 
 def resolve_status(steps, live):
-    done = sum(1 for s in steps if s["done"])
+    plan_only = status_for(steps)
     pr_state = live["pr"]["state"] if live and live.get("pr") else None
-    if (steps and done == len(steps)) or pr_state == "MERGED":
+    if plan_only == "done" or pr_state == "MERGED":
         return "done"
     if pr_state == "OPEN":
         return "review"
-    if done or (live and (live["ahead"] or live["dirty"])):
+    if plan_only == "in_progress" or (live and (live["ahead"] or live["dirty"])):
         return "in_progress"
     return "backlog"
+
+
+def merge_steps(plan_steps, tree_steps):
+    """A task's steps from the root plan and from its worktree's copy: per step the further state wins.
+
+    When the counts differ, the branch replanned the task and its copy stands as it is."""
+    if len(plan_steps) != len(tree_steps):
+        return tree_steps
+    out = []
+    for a, b in zip(plan_steps, tree_steps):
+        state = max(step_state(a), step_state(b), key=RANK.get)
+        out.append({"text": b["text"], "done": state == "done", "state": state})
+    return out
 
 
 def run(args, cwd, timeout):
@@ -201,8 +247,19 @@ def read_git(root):
         ahead = run(["git", "rev-list", "--count", f"{base}..{branch}"], root, GIT_TIMEOUT) if base else None
         status = run(["git", "-C", path, "status", "--porcelain"], root, GIT_TIMEOUT)
         worktrees.append({"path": path, "branch": branch, "ahead": int(ahead) if ahead else 0,
-                          "dirty": bool(status and status.strip())})
+                          "dirty": bool(status and status.strip()), "plans": plan_texts(path)})
     return {"default": default, "worktrees": worktrees}
+
+
+def plan_texts(path):
+    """{basename: text} of every readable plan in one checkout, uncommitted edits included."""
+    texts = {}
+    for name in list_plans(path):
+        try:
+            texts[name] = (Path(path) / PLAN_DIR / name).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            pass
+    return texts
 
 
 def read_prs(root):
@@ -260,7 +317,7 @@ def load_board(root, name=None, data=None):
             parsed[n] = parse_plan((root / PLAN_DIR / n).read_text(encoding="utf-8"))
         except UnicodeDecodeError:
             errors[n] = "not UTF-8"
-    candidates = [(n, any(not s["done"] for t in p["tasks"] for s in t["steps"]))
+    candidates = [(n, any(is_open(s) for t in p["tasks"] for s in t["steps"]))
                   for n, p in parsed.items()]
     chosen = name if name in parsed else pick_plan(candidates)
     board = {"root": str(root), "plan": chosen, "plans": names, "errors": errors,
@@ -268,10 +325,21 @@ def load_board(root, name=None, data=None):
              "title": "", "goal": "", "tasks": []}
     if chosen:
         board.update(parsed[chosen])
-        matches = match_tasks(board["tasks"], git["worktrees"] if git else [], prs)
+        worktrees = git["worktrees"] if git else []
+        matches = match_tasks(board["tasks"], worktrees, prs, plan=chosen)
+        used = {m["worktree"] for m in matches.values() if m and m["worktree"]}
+        copies = {w["path"]: parse_plan(w["plans"][chosen])["tasks"] for w in worktrees
+                  if w["path"] in used and chosen in (w.get("plans") or {})}
         for task in board["tasks"]:
             task["live"] = matches[task["number"]]
             task["plan_status"] = task["status"]
+            task["steps_from"] = "plan"
+            copy = copies.get(task["live"]["worktree"], []) if task["live"] else []
+            twin = next((t for t in copy if t["number"] == task["number"]), None)
+            if twin is not None:
+                task["steps"] = merge_steps(task["steps"], twin["steps"])
+                task["body"] = twin["body"]
+                task["steps_from"] = "worktree"
             task["status"] = resolve_status(task["steps"], task["live"])
     return board
 
@@ -440,6 +508,10 @@ PAGE = r"""<!doctype html>
   .steps li.done { text-decoration: line-through; }
   .steps .box { flex: none; width: 12px; height: 12px; margin-top: 3px; border: 1px solid var(--muted); border-radius: 3px; }
   .steps li.done .box { background: var(--tick); border-color: var(--tick); }
+  .steps li.doing { color: var(--ink); }
+  .steps li.doing .box { border-color: var(--progress); background: linear-gradient(90deg, var(--progress) 50%, transparent 50%); }
+  .steps li.skipped { text-decoration: line-through; opacity: .6; }
+  .steps li.skipped .box { border-style: dashed; }
   pre { background: var(--soft); border-radius: 6px; padding: 10px; font-size: 12px; overflow: auto; white-space: pre-wrap; margin: 0; }
   .keys { font-size: 11px; color: var(--muted); padding: 0 16px 16px; }
   kbd { font: 11px ui-monospace, Menlo, monospace; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
@@ -477,6 +549,11 @@ PAGE = r"""<!doctype html>
   const COLUMNS = [["backlog", "Backlog"], ["in_progress", "In progress"], ["review", "Review"], ["done", "Done"]];
   const NAMES = Object.fromEntries(COLUMNS);
   const PR_WORDS = { OPEN: "opened", MERGED: "merged", CLOSED: "closed" };
+  const STEP_WORDS = { doing: "started", done: "ticked", skipped: "skipped" };
+  function stepState(s) { return s.state || (s.done ? "done" : "open"); }
+  function stepItem(s) {
+    const li = el("li", stepState(s)); li.appendChild(el("span", "box")); li.appendChild(el("span", "", s.text)); return li;
+  }
   const EMPTY = "no plan found under docs/superpowers/plans";
   const params = new URLSearchParams(location.search);
   const state = {
@@ -540,7 +617,10 @@ PAGE = r"""<!doctype html>
       if (!o) lines.push("added to " + NAMES[t.status]);
       else {
         if (o.status !== t.status) lines.push("moved to " + NAMES[t.status]);
-        t.steps.forEach(function (s, i) { if (s.done && !(o.steps[i] && o.steps[i].done)) lines.push(s.text + " ticked"); });
+        t.steps.forEach(function (s, i) {
+          const now = stepState(s), was = o.steps[i] ? stepState(o.steps[i]) : "open";
+          if (now !== was && STEP_WORDS[now]) lines.push(s.text + " " + STEP_WORDS[now]);
+        });
         const op = o.live && o.live.pr, np = t.live && t.live.pr;
         if (np && (!op || op.number !== np.number || op.state !== np.state)) lines.push("PR #" + np.number + " " + (PR_WORDS[np.state] || np.state.toLowerCase()));
         if (t.live && t.live.branch && !(o.live && o.live.branch)) lines.push("branch " + t.live.branch);
@@ -570,14 +650,17 @@ PAGE = r"""<!doctype html>
     a.appendChild(el("div", "num", "Task " + t.number));
     a.appendChild(el("div", "title", t.title));
     const done = t.steps.filter(function (s) { return s.done; }).length;
+    const skipped = t.steps.filter(function (s) { return stepState(s) === "skipped"; }).length;
+    const total = t.steps.length - skipped;
     if (t.steps.length) {
       const row = el("div", "progress");
       const bar = el("div", "bar"), fill = el("span");
-      fill.style.width = (100 * done / t.steps.length) + "%";
+      fill.style.width = (total ? 100 * done / total : 100) + "%";
       bar.appendChild(fill); row.appendChild(bar);
-      row.appendChild(el("span", "", done + "/" + t.steps.length));
+      row.appendChild(el("span", "", done + "/" + total + (skipped ? " · " + skipped + " skipped" : "")));
       a.appendChild(row);
-      const next = t.steps.find(function (s) { return !s.done; });
+      const next = t.steps.find(function (s) { return stepState(s) === "doing"; }) ||
+        t.steps.find(function (s) { return stepState(s) === "open"; });
       if (next) a.appendChild(el("div", "next", next.text));
     }
     const badges = el("div", "badges");
@@ -647,7 +730,7 @@ PAGE = r"""<!doctype html>
     body.appendChild(el("div", "num", "Task " + t.number));
     body.appendChild(el("h2", "", t.title));
     body.appendChild(el("span", "pill pill-" + t.status, NAMES[t.status]));
-    if (t.plan_status && t.plan_status !== t.status) body.appendChild(el("span", "muted", "plan ticks say " + NAMES[t.plan_status]));
+    if (t.plan_status && t.plan_status !== t.status) body.appendChild(el("span", "muted", "the root plan says " + NAMES[t.plan_status]));
 
     const dl = el("dl");
     function fact(k, v) {
@@ -666,6 +749,7 @@ PAGE = r"""<!doctype html>
       fact("Depends on", span);
     }
     const L = t.live;
+    fact("Ticks", t.steps_from === "worktree" ? "from the worktree" : "from the plan");
     if (L && L.branch) fact("Branch", L.branch);
     if (L && L.worktree) {
       fact("Worktree", L.worktree);
@@ -682,9 +766,7 @@ PAGE = r"""<!doctype html>
     if (t.steps.length) {
       body.appendChild(el("h3", "", "Steps"));
       const ul = el("ul", "steps");
-      t.steps.forEach(function (s) {
-        const li = el("li", s.done ? "done" : ""); li.appendChild(el("span", "box")); li.appendChild(el("span", "", s.text)); ul.appendChild(li);
-      });
+      t.steps.forEach(function (s) { ul.appendChild(stepItem(s)); });
       body.appendChild(ul);
     }
     if (t.body) { body.appendChild(el("h3", "", "Plan text")); body.appendChild(el("pre", "", t.body)); }

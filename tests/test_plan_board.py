@@ -91,8 +91,9 @@ def task(number, title, ticks=()):
     return {"number": number, "title": title, "steps": [{"text": "s", "done": t} for t in ticks]}
 
 
-def worktree(branch, ahead=0, dirty=False):
-    return {"path": "/wt/" + branch.rsplit("/", 1)[-1], "branch": branch, "ahead": ahead, "dirty": dirty}
+def worktree(branch, ahead=0, dirty=False, plans=None):
+    return {"path": "/wt/" + branch.rsplit("/", 1)[-1], "branch": branch, "ahead": ahead, "dirty": dirty,
+            "plans": plans or {}}
 
 
 def pr(number, title, state="OPEN", head="other", body=""):
@@ -138,6 +139,90 @@ class Matching(unittest.TestCase):
         self.assertEqual(live[1]["worktree"], "/wt/a-x")
         live = pb.match_tasks([task(1, "A")], [], [pr(3, "Task 1: A", "CLOSED")])
         self.assertIsNone(live[1])
+
+    def test_branch_number(self):
+        self.assertEqual(pb.branch_number("task/02-import-csv"), 2)
+        self.assertEqual(pb.branch_number("feat/03-export-pdf-4d2e1a"), 3)
+        self.assertEqual(pb.branch_number("claude/task-07-cleanup-1eff3c"), 7)
+        self.assertEqual(pb.branch_number("task-3"), 3)
+        self.assertEqual(pb.branch_number("Task3-x"), 3)
+        self.assertIsNone(pb.branch_number("claude/2fa-login"))
+        self.assertIsNone(pb.branch_number("claude/complete-todo-3fa2c1"))
+        self.assertIsNone(pb.branch_number(""))
+
+    def test_number_match_needs_the_plan_file(self):
+        tasks = [task(3, "Editor on sections")]
+        holds = worktree("feat/03-export-pdf-4d2e1a", ahead=1, plans={"p.md": "# P"})
+        lacks = worktree("feat/03-export-pdf-4d2e1a", ahead=1, plans={"old.md": "# O"})
+        self.assertEqual(pb.match_tasks(tasks, [holds], [], plan="p.md")[3]["branch"], "feat/03-export-pdf-4d2e1a")
+        self.assertIsNone(pb.match_tasks(tasks, [lacks], [], plan="p.md")[3])
+        self.assertIsNone(pb.match_tasks(tasks, [holds], [])[3])
+
+    def test_slug_match_beats_number_match(self):
+        tasks = [task(1, "Write the parser"), task(2, "Other")]
+        wts = [worktree("feat/01-x", plans={"p.md": ""}), worktree("claude/write-the-parser-ab12cd", ahead=1)]
+        self.assertEqual(pb.match_tasks(tasks, wts, [], plan="p.md")[1]["branch"], "claude/write-the-parser-ab12cd")
+
+    def test_number_matched_worktree_adopts_its_branch_pr(self):
+        tasks = [task(2, "Segmentation in capture")]
+        wts = [worktree("task/02-capture", plans={"p.md": ""})]
+        prs = [pr(9, "feat: something else", "MERGED", head="task/02-capture"),
+               pr(10, "feat: something else", "OPEN", head="task/02-capture"),
+               pr(11, "unrelated", "OPEN", head="task/02-other")]
+        live = pb.match_tasks(tasks, wts, prs, plan="p.md")
+        self.assertEqual(live[2]["pr"]["number"], 10)
+
+    def test_prs_are_not_matched_by_number(self):
+        live = pb.match_tasks([task(1, "New task")], [], [pr(4, "Old", "MERGED", head="task/01-old-plan")], plan="p.md")
+        self.assertIsNone(live[1])
+
+
+def steps(*states):
+    return [{"text": "s%d" % i, "done": s == "done", "state": s} for i, s in enumerate(states)]
+
+
+class Markers(unittest.TestCase):
+    def test_states_and_done(self):
+        text = "# P\n\n### Task 1: M\n\n- [ ] a\n- [/] b\n- [x] c\n- [X] d\n- [-] e\n"
+        got = pb.parse_plan(text)["tasks"][0]["steps"]
+        self.assertEqual([s["state"] for s in got], ["open", "doing", "done", "done", "skipped"])
+        self.assertEqual([s["done"] for s in got], [False, False, True, True, False])
+        self.assertEqual(got[1]["text"], "b")
+
+    def test_plan_only_status(self):
+        self.assertEqual(pb.status_for(steps("doing", "open")), "in_progress")
+        self.assertEqual(pb.status_for(steps("done", "skipped")), "done")
+        self.assertEqual(pb.status_for(steps("skipped")), "done")
+        self.assertEqual(pb.status_for(steps("skipped", "open")), "backlog")
+        self.assertEqual(pb.status_for(steps("open")), "backlog")
+        self.assertEqual(pb.status_for([]), "backlog")
+
+    def test_resolve_status_reads_states(self):
+        self.assertEqual(pb.resolve_status(steps("doing", "open"), None), "in_progress")
+        self.assertEqual(pb.resolve_status(steps("done", "skipped"), None), "done")
+
+    def test_doing_step_keeps_the_plan_open(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plans = Path(tmp) / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            (plans / "2026-10-01-a.md").write_text("# A\n\n### Task 1: A\n\n- [/] a\n", encoding="utf-8")
+            (plans / "2026-10-02-b.md").write_text("# B\n\n### Task 1: B\n\n- [x] b\n- [-] c\n", encoding="utf-8")
+            self.assertEqual(pb.load_board(tmp)["plan"], "2026-10-01-a.md")
+
+
+class MergeSteps(unittest.TestCase):
+    def test_further_state_wins_per_step(self):
+        plan = steps("done", "open", "open", "doing")
+        tree = steps("open", "doing", "skipped", "open")
+        tree[1]["text"] = "renamed"
+        got = pb.merge_steps(plan, tree)
+        self.assertEqual([s["state"] for s in got], ["done", "doing", "skipped", "doing"])
+        self.assertEqual(got[1]["text"], "renamed")
+        self.assertEqual([s["done"] for s in got], [True, False, False, False])
+
+    def test_different_count_takes_the_worktree_copy(self):
+        tree = steps("open", "open", "done")
+        self.assertEqual(pb.merge_steps(steps("done"), tree), tree)
 
 
 class ResolveStatus(unittest.TestCase):
@@ -191,6 +276,34 @@ class GitSource(unittest.TestCase):
             self.assertEqual(board["tasks"][1]["live"]["ahead"], 1)
             self.assertFalse(board["tasks"][1]["live"]["dirty"])
             self.assertEqual(board["tasks"][1]["plan_status"], "backlog")
+
+    def test_uncommitted_tick_in_a_number_named_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            plans = repo / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            (plans / "2026-10-21-demo.md").write_text(PLAN_TEXT, encoding="utf-8")
+            git(repo, "init", "-q", "-b", "main")
+            git(repo, "add", ".")
+            git(repo, "commit", "-q", "-m", "plan")
+            wt = Path(tmp) / "wt"
+            git(repo, "worktree", "add", "-q", "-b", "feat/02-short-a1b2c3", str(wt))
+            wt_plan = wt / "docs" / "superpowers" / "plans" / "2026-10-21-demo.md"
+            wt_plan.write_text(PLAN_TEXT.replace("- [ ] two", "- [x] two\n- [ ] three"), encoding="utf-8")
+
+            git_data = pb.read_git(repo)
+            self.assertIn("2026-10-21-demo.md", git_data["worktrees"][0]["plans"])
+            board = pb.load_board(repo, data={"git": git_data, "prs": None})
+            one, two = board["tasks"]
+            self.assertEqual((one["status"], one["steps_from"]), ("backlog", "plan"))
+            self.assertEqual(two["live"]["branch"], "feat/02-short-a1b2c3")
+            self.assertTrue(two["live"]["dirty"])
+            self.assertEqual(two["steps_from"], "worktree")
+            self.assertIn("- [ ] three", two["body"])
+            self.assertEqual([s["state"] for s in two["steps"]], ["done", "open"])
+            self.assertEqual(two["status"], "in_progress")
+            self.assertEqual(two["plan_status"], "backlog")
+            self.assertNotIn("plans", two["live"])
 
     def test_not_a_repository_top_level(self):
         self.assertIsNone(pb.read_git(FIXTURE))
