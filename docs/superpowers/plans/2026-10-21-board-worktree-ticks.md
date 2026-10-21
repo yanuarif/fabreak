@@ -32,4 +32,4 @@ Depends on: Task 2
 
 - [x] **Step 1: Step boxes, progress, next step, ticks fact and activity lines**
 - [x] **Step 2: Checked in the preview pane against a temporary repository**
-- [x] **Step 3: `board.md`, `skills/board/SKILL.md`, live board spec, README, version 0.8.0 and the full check list**
+- [x] **Step 3: `board.md`, `skills/board/SKILL.md`, live board spec, README, version 0.7.1 and the full check list**

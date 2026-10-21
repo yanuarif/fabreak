@@ -55,4 +55,4 @@ The task's `body` becomes the worktree copy's, and the task carries `steps_from:
 
 ## Versioning
 
-`/healthz` reports `"api": 3`; the command treats a server with this root and any other `api`, or none, as an older version, stops it and starts this one. `0.8.0` in `plugin.json` and `marketplace.json`. `board.md` (Plan board), `skills/board/SKILL.md` and the live board spec's matching section name the number match, the worktree ticks and the markers.
+`/healthz` reports `"api": 3`; the command treats a server with this root and any other `api`, or none, as an older version, stops it and starts this one. `0.7.1` in `plugin.json` and `marketplace.json`. `board.md` (Plan board), `skills/board/SKILL.md` and the live board spec's matching section name the number match, the worktree ticks and the markers.
