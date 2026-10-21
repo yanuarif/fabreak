@@ -18,7 +18,7 @@ The default branch is `git symbolic-ref --short refs/remotes/origin/HEAD` withou
 
 ### Matching a task
 
-`2026-10-21-board-worktree-ticks-design.md` adds matching by task number, step ticks read from the task's worktree, and the `[/]` and `[-]` step markers.
+`2026-10-21-board-worktree-ticks-design.md` adds matching by task number, step ticks read from the task's worktree, and the `[/]` and `[-]` step markers. `2026-10-21-board-lifecycle-design.md` adds the session's progress file, the stop route and the session watcher.
 
 - **PR**: the PR's title or body contains `Task <N>: <title>` (case-insensitive; hosting.md puts the task heading in the body), or the PR title's slug equals the task title's slug, or the PR's head branch matches the task (below). An open PR wins over a merged one; closed PRs are ignored.
 - **Branch**: a branch's key is its last `/` segment with a trailing `-<6 hex>` removed (the app names a card's branch from its title, as in `claude/complete-todo-3fa2c1`). It matches a task when the key equals the task title's slug, or the key is at least 8 characters and the slug starts with it. A key that matches more than one task matches none.

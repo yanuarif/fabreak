@@ -12,6 +12,7 @@ Events. Writes nothing. Standard library only.
 """
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -25,6 +26,7 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen
 
 PLAN_DIR = Path("docs") / "superpowers" / "plans"
+PROGRESS_FILE = "fabreak-steps.md"
 TASK_RE = re.compile(r"^### Task (\d+): (.+?)\s*$")
 STEP_RE = re.compile(r"^- \[([ xX/-])\] (.*)$")
 MARKS = {" ": "open", "/": "doing", "x": "done", "X": "done", "-": "skipped"}
@@ -35,7 +37,7 @@ DEPENDS_RE = re.compile(r"depends on", re.IGNORECASE)
 TASK_REF_RE = re.compile(r"\bTask (\d+)\b")
 HEX_TAIL_RE = re.compile(r"-[0-9a-f]{6}$")
 NUMBER_RE = re.compile(r"^(?:task-?)?0*(\d+)(?:-|$)", re.IGNORECASE)
-API = 3
+API = 4
 GIT_TIMEOUT = 5
 GH_TIMEOUT = 15
 PING_EVERY = 15
@@ -247,8 +249,20 @@ def read_git(root):
         ahead = run(["git", "rev-list", "--count", f"{base}..{branch}"], root, GIT_TIMEOUT) if base else None
         status = run(["git", "-C", path, "status", "--porcelain"], root, GIT_TIMEOUT)
         worktrees.append({"path": path, "branch": branch, "ahead": int(ahead) if ahead else 0,
-                          "dirty": bool(status and status.strip()), "plans": plan_texts(path)})
+                          "dirty": bool(status and status.strip()), "plans": plan_texts(path),
+                          "progress": progress_text(path)})
     return {"default": default, "worktrees": worktrees}
+
+
+def progress_text(path):
+    """The task session's progress file in the worktree's private git folder, or None."""
+    where = run(["git", "-C", path, "rev-parse", "--git-path", PROGRESS_FILE], path, GIT_TIMEOUT)
+    if not where:
+        return None
+    try:
+        return (Path(path) / where.strip()).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
 
 
 def plan_texts(path):
@@ -330,16 +344,22 @@ def load_board(root, name=None, data=None):
         used = {m["worktree"] for m in matches.values() if m and m["worktree"]}
         copies = {w["path"]: parse_plan(w["plans"][chosen])["tasks"] for w in worktrees
                   if w["path"] in used and chosen in (w.get("plans") or {})}
+        progress = {w["path"]: parse_plan(w["progress"])["tasks"] for w in worktrees
+                    if w["path"] in used and w.get("progress")}
         for task in board["tasks"]:
             task["live"] = matches[task["number"]]
             task["plan_status"] = task["status"]
             task["steps_from"] = "plan"
-            copy = copies.get(task["live"]["worktree"], []) if task["live"] else []
-            twin = next((t for t in copy if t["number"] == task["number"]), None)
+            path = task["live"]["worktree"] if task["live"] else None
+            twin = next((t for t in copies.get(path, []) if t["number"] == task["number"]), None)
             if twin is not None:
                 task["steps"] = merge_steps(task["steps"], twin["steps"])
                 task["body"] = twin["body"]
                 task["steps_from"] = "worktree"
+            mine = next((t for t in progress.get(path, []) if t["number"] == task["number"]), None)
+            if mine is not None and mine["steps"]:
+                task["steps"] = merge_steps(task["steps"], mine["steps"])
+                task["steps_from"] = "progress"
             task["status"] = resolve_status(task["steps"], task["live"])
     return board
 
@@ -443,6 +463,11 @@ PAGE = r"""<!doctype html>
   .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--backlog); }
   .live-live::before { background: var(--done); box-shadow: 0 0 0 3px color-mix(in srgb, var(--done) 25%, transparent); }
   .live-retry::before { background: var(--progress); }
+  .live-stopped::before { background: var(--warn); }
+  #stop { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 2px 9px;
+          font-size: 12px; color: var(--muted); cursor: pointer; }
+  #stop:hover { color: var(--warn); border-color: currentColor; }
+  #stop[hidden] { display: none; }
   .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
   .tools input { flex: 1 1 220px; min-width: 0; background: var(--panel); border: 1px solid var(--line);
                  border-radius: 6px; padding: 5px 9px; }
@@ -524,6 +549,7 @@ PAGE = r"""<!doctype html>
     <h1 id="title"></h1>
     <span class="live" id="live" role="status">Connecting</span>
     <select id="plans" hidden aria-label="Plan"></select>
+    <button type="button" id="stop" title="Stop the board server">Stop</button>
   </div>
   <p class="goal" id="goal"></p>
   <div class="tools">
@@ -559,7 +585,7 @@ PAGE = r"""<!doctype html>
   const state = {
     plan: params.get("plan") || "", q: params.get("q") || "",
     hide: new Set((params.get("hide") || "").split(",").filter(Boolean)),
-    board: null, open: null, flash: new Set(), log: []
+    board: null, open: null, flash: new Set(), log: [], stopped: false
   };
   let source = null;
   const $ = function (id) { return document.getElementById(id); };
@@ -581,7 +607,8 @@ PAGE = r"""<!doctype html>
   }
 
   function setLive(mode) {
-    const words = { connecting: "Connecting", live: "Live", retry: "Reconnecting" };
+    const words = { connecting: "Connecting", live: "Live", retry: "Reconnecting",
+                    stopped: "Stopped · run /fabreak:board to start it again" };
     $("live").className = "live live-" + mode;
     $("live").textContent = words[mode];
   }
@@ -592,10 +619,27 @@ PAGE = r"""<!doctype html>
     source = new EventSource("/api/events" + (state.plan ? "?plan=" + encodeURIComponent(state.plan) : ""));
     source.addEventListener("open", function () { setLive("live"); });
     source.addEventListener("board", function (e) { setLive("live"); update(JSON.parse(e.data)); });
+    source.addEventListener("stopped", stopped);
     source.addEventListener("error", function () {
+      if (state.stopped) return;
       setLive("retry");
       if (source.readyState === EventSource.CLOSED) setTimeout(connect, 3000);
     });
+  }
+
+  function stopped() {
+    state.stopped = true;
+    if (source) source.close();
+    $("stop").hidden = true;
+    setLive("stopped");
+  }
+
+  async function stopServer() {
+    $("stop").disabled = true;
+    try {
+      await fetch("/api/stop", { method: "POST", headers: { "X-Plan-Board": "stop" } });
+      stopped();
+    } catch (e) { $("stop").disabled = false; }
   }
 
   function update(board) {
@@ -749,7 +793,7 @@ PAGE = r"""<!doctype html>
       fact("Depends on", span);
     }
     const L = t.live;
-    fact("Ticks", t.steps_from === "worktree" ? "from the worktree" : "from the plan");
+    fact("Ticks", { progress: "from the session", worktree: "from the worktree" }[t.steps_from] || "from the plan");
     if (L && L.branch) fact("Branch", L.branch);
     if (L && L.worktree) {
       fact("Worktree", L.worktree);
@@ -837,6 +881,7 @@ PAGE = r"""<!doctype html>
     if (c) openDetail(Number(c.dataset.task));
   });
   $("detail-close").addEventListener("click", closeDetail);
+  $("stop").addEventListener("click", stopServer);
   $("plans").addEventListener("change", function (e) { switchPlan(e.target.value); });
   $("search").value = state.q;
   $("search").addEventListener("input", function (e) { state.q = e.target.value; saveUrl(); render(); });
@@ -900,6 +945,14 @@ def make_server(root, port, verbose=False, live=None):
                 return self._send(200, "text/html; charset=utf-8", PAGE.encode("utf-8"))
             self._send(404, "text/plain; charset=utf-8", b"not found\n")
 
+        def do_POST(self):
+            if urlparse(self.path).path != "/api/stop":
+                return self._send(404, "text/plain; charset=utf-8", b"not found\n")
+            if self.headers.get("X-Plan-Board") != "stop":
+                return self._send(403, "text/plain; charset=utf-8", b"missing X-Plan-Board: stop\n")
+            self._json({"stopping": True})
+            self.server.stop()
+
         def _events(self, plan):
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
@@ -917,6 +970,8 @@ def make_server(root, port, verbose=False, live=None):
                     if live.wait(version, PING_EVERY) == version and not live.stopped:
                         self.wfile.write(b": ping\n\n")
                         self.wfile.flush()
+                self.wfile.write(b"event: stopped\ndata: {}\n\n")
+                self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
@@ -934,6 +989,11 @@ def make_server(root, port, verbose=False, live=None):
     class Server(ThreadingHTTPServer):
         daemon_threads = True
 
+        def stop(self):
+            """End every event stream, then serve_forever, from any thread."""
+            live.stop()
+            threading.Thread(target=self.shutdown, daemon=True).start()
+
         def server_close(self):
             live.stop()
             super().server_close()
@@ -941,6 +1001,23 @@ def make_server(root, port, verbose=False, live=None):
     server = Server(("127.0.0.1", port), Handler)
     server.live = live.start()
     return server
+
+
+def pid_alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def watch_pid(pid, on_gone, every=2.0):
+    """Call on_gone once the process `pid` no longer exists."""
+    while pid_alive(pid):
+        time.sleep(every)
+    on_gone()
 
 
 def healthz(port):
@@ -957,6 +1034,7 @@ def main(argv=None):
     ap.add_argument("--root", default=".", help="repository root (default: current directory)")
     ap.add_argument("--port", type=int, help="port on 127.0.0.1 (default: derived from the root path)")
     ap.add_argument("--verbose", action="store_true", help="log one line per request to stderr")
+    ap.add_argument("--watch-pid", type=int, help="stop when this process ends (the session that started the board)")
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
     if not root.is_dir():
@@ -973,6 +1051,8 @@ def main(argv=None):
         print(f"port {port} is in use by another process; pass --port", file=sys.stderr)
         return 1
     print(url, flush=True)
+    if args.watch_pid:
+        threading.Thread(target=watch_pid, args=(args.watch_pid, server.stop), daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

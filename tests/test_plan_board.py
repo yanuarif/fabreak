@@ -5,11 +5,13 @@ python3 -m unittest tests/test_plan_board.py
 import importlib.util
 import json
 import subprocess
+import sys
 import tempfile
 import threading
 import unittest
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests" / "fixtures" / "greenfield-with-plan"
@@ -305,6 +307,37 @@ class GitSource(unittest.TestCase):
             self.assertEqual(two["plan_status"], "backlog")
             self.assertNotIn("plans", two["live"])
 
+    def test_progress_file_in_the_private_git_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            plans = repo / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            (plans / "2026-10-21-demo.md").write_text(PLAN_TEXT, encoding="utf-8")
+            git(repo, "init", "-q", "-b", "main")
+            git(repo, "add", ".")
+            git(repo, "commit", "-q", "-m", "plan")
+            wt = Path(tmp) / "wt"
+            git(repo, "worktree", "add", "-q", "-b", "feat/02-short-a1b2c3", str(wt))
+            path = subprocess.run(["git", "rev-parse", "--git-path", "fabreak-steps.md"], cwd=wt,
+                                  check=True, capture_output=True, text=True).stdout.strip()
+            progress = (wt / path).resolve()
+
+            def board():
+                return pb.load_board(repo, data={"git": pb.read_git(repo), "prs": None})
+
+            self.assertIsNone(pb.read_git(repo)["worktrees"][0]["progress"])
+            progress.write_text("### Task 1: Write the parser\n\n- [x] one\n", encoding="utf-8")
+            two = board()["tasks"][1]
+            self.assertEqual((two["status"], two["steps_from"]), ("backlog", "worktree"))
+            self.assertEqual(board()["tasks"][0]["steps_from"], "plan")
+
+            progress.write_text("### Task 2: Task two title\n\n- [/] two\n", encoding="utf-8")
+            two = board()["tasks"][1]
+            self.assertEqual(two["steps_from"], "progress")
+            self.assertEqual([s["state"] for s in two["steps"]], ["doing"])
+            self.assertEqual(two["status"], "in_progress")
+            self.assertFalse(two["live"]["dirty"])
+
     def test_not_a_repository_top_level(self):
         self.assertIsNone(pb.read_git(FIXTURE))
 
@@ -386,6 +419,48 @@ class LoadBoard(unittest.TestCase):
         self.assertEqual(board["tasks"], [])
 
 
+class Stop(unittest.TestCase):
+    def test_pid_alive_and_watch(self):
+        self.assertTrue(pb.pid_alive(pb.os.getpid()))
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(0.3)"])
+        gone = threading.Event()
+        threading.Thread(target=pb.watch_pid, args=(child.pid, gone.set, 0.05), daemon=True).start()
+        self.assertFalse(gone.wait(0.1))
+        child.wait()
+        self.assertTrue(gone.wait(2))
+        self.assertFalse(pb.pid_alive(child.pid))
+
+    def test_stop_needs_the_header_then_ends_streams_and_the_server(self):
+        server = pb.make_server(FIXTURE, 0, live=pb.Live(FIXTURE, git=False, prs=False))
+        base = f"http://127.0.0.1:{server.server_address[1]}"
+        loop = threading.Thread(target=server.serve_forever, daemon=True)
+        loop.start()
+        try:
+            with self.assertRaises(HTTPError) as refused:
+                urlopen(Request(base + "/api/stop", method="POST"), timeout=2)
+            self.assertEqual(refused.exception.code, 403)
+            stream = urlopen(base + "/api/events", timeout=5)
+            read_event(stream)
+            req = Request(base + "/api/stop", method="POST", headers={"X-Plan-Board": "stop"})
+            with urlopen(req, timeout=2) as r:
+                self.assertEqual(json.loads(r.read()), {"stopping": True})
+            self.assertEqual(read_named_event(stream), "stopped")
+            loop.join(3)
+            self.assertFalse(loop.is_alive())
+        finally:
+            if loop.is_alive():
+                server.shutdown()
+            server.server_close()
+
+
+def read_named_event(stream):
+    """The name of the next event on an open SSE response, skipping pings."""
+    while True:
+        line = stream.readline().decode("utf-8").rstrip("\n")
+        if line.startswith("event: "):
+            return line[7:]
+
+
 class Server(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -430,6 +505,7 @@ class Server(unittest.TestCase):
         for heading in ("Backlog", "In progress", "Review", "Done"):
             self.assertIn(heading, html)
         self.assertIn("/api/events", html)
+        self.assertIn("/api/stop", html)
         self.assertIn("no plan found under docs/superpowers/plans", html)
 
     def test_not_found(self):
