@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, lane B for a legacy takeover; both become one session per task on the board, then loop C: worktree, implement, verify, review, finish; then PR or MR, CI, merge, release, closing; back edges for review findings, replan and hotfix.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, lane B for a legacy takeover; screens are approved on a Claude Design canvas before the spec; after a card round every plan task becomes its own session, run or held, then loop C: worktree, implement, verify, review, finish; the live plan board shows steps, worktrees and PRs; then PR or MR, CI or local evidence, merge, tick, release, closing; back edges for review findings, replan and hotfix.">
   <style>
     .n rect { fill: #ffffff; stroke-width: 1.6; }
     .sp rect { stroke: #0f766e; } .mp rect { stroke: #b45309; } .an rect { stroke: #6d28d9; }
@@ -53,8 +53,11 @@
   <g class="tag"><rect x="88" y="397" width="44" height="14" rx="3"/><text x="93" y="407">replan</text></g>
   <g class="n tl"><rect x="80" y="492" width="220" height="56" rx="4"/><text class="t" x="190" y="515" text-anchor="middle">bootstrap repo</text><text class="d" x="190" y="533" text-anchor="middle">CLAUDE.md, pre-commit, CI if wanted; wizard</text><text class="b" x="292" y="504" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="88" y="485" width="60" height="14" rx="3"/><text x="93" y="495">bootstrap</text></g>
+  <g class="n tl"><rect x="370" y="150" width="220" height="56" rx="4"/><text class="t" x="480" y="173" text-anchor="middle">design canvas</text><text class="d" x="480" y="191" text-anchor="middle">Claude Design: screens approved first</text><text class="b" x="582" y="162" text-anchor="end">app</text></g>
+  <polyline class="ln" points="302,242 330,242 330,178 368,178" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text class="lbl" x="326" y="214" text-anchor="end">screens</text>
   <g class="n mp"><rect x="370" y="232" width="220" height="44" rx="4"/><text class="t" x="480" y="250" text-anchor="middle">research</text><text class="d" x="480" y="266" text-anchor="middle">facts from primary sources, into the repo</text><text class="b" x="582" y="244" text-anchor="end">MP</text></g>
-  <g class="n mp"><rect x="370" y="288" width="220" height="44" rx="4"/><text class="t" x="480" y="306" text-anchor="middle">prototype + design</text><text class="d" x="480" y="322" text-anchor="middle">UI variations, then frontend-design direction</text><text class="b" x="582" y="300" text-anchor="end">MP+AN</text></g>
+  <g class="n mp"><rect x="370" y="288" width="220" height="44" rx="4"/><text class="t" x="480" y="306" text-anchor="middle">prototype</text><text class="d" x="480" y="322" text-anchor="middle">spike UI: variations as canvas artboards</text><text class="b" x="582" y="300" text-anchor="end">MP</text></g>
   <g class="n mp"><rect x="370" y="344" width="220" height="44" rx="4"/><text class="t" x="480" y="362" text-anchor="middle">feasibility spike</text><text class="d" x="480" y="378" text-anchor="middle">time-boxed, branch archived, result = ADR</text><text class="b" x="582" y="356" text-anchor="end">MP</text></g>
   <g class="tag"><rect x="378" y="337" width="36" height="14" rx="3"/><text x="383" y="347">spike</text></g>
   <line class="ln" x1="190" y1="196" x2="190" y2="226" marker-end="url(#a)"/><text class="lbl" x="200" y="215">agreement</text>
@@ -63,9 +66,9 @@
   <line class="ln" x1="190" y1="460" x2="190" y2="490" marker-end="url(#a)"/><text class="lbl" x="200" y="479">first repo only</text>
   <polyline class="ln" points="300,344 340,344 340,254 368,254" marker-end="url(#a)"/>
   <polyline class="ln" points="340,310 368,310" marker-end="url(#a)"/>
-  <polyline class="ln" points="340,366 368,366" marker-end="url(#a)"/>
+  <polyline class="ln" points="340,344 340,366 368,366" marker-end="url(#a)"/>
   <text class="lbl" x="344" y="226">when a question stays open</text>
-  <line class="ln" x1="190" y1="548" x2="190" y2="616" marker-end="url(#a)"/><text class="lbl" x="200" y="586">1 plan task = 1 proposal card</text>
+  <line class="ln" x1="190" y1="548" x2="190" y2="610" marker-end="url(#a)"/><text class="lbl" x="200" y="578">card round: permissions, start now?</text><text class="lbl" x="200" y="594">then every plan task is a card at once</text>
 
   <!-- Lane B -->
   <g class="n mp"><rect x="660" y="140" width="220" height="56" rx="4"/><text class="t" x="770" y="163" text-anchor="middle">research</text><text class="d" x="770" y="181" text-anchor="middle">code map; the code is the primary source</text><text class="b" x="872" y="152" text-anchor="end">MP</text></g>
@@ -86,17 +89,22 @@
   <text class="lbl" x="530" y="640" text-anchor="middle">writing-plans per change</text>
 
   <!-- Convergence -->
-  <g class="n tl"><rect x="90" y="620" width="200" height="56" rx="4"/><text class="t" x="190" y="643" text-anchor="middle">One session per task</text><text class="d" x="190" y="661" text-anchor="middle">run or held; at most three run at once</text><text class="b" x="282" y="632" text-anchor="end">Claude Code</text></g>
-  <line class="ln" x1="190" y1="676" x2="190" y2="746" marker-end="url(#a)"/><text class="lbl" x="200" y="738">card started = linked session</text>
+  <g class="n tl"><rect x="90" y="612" width="200" height="68" rx="4"/><text class="t" x="190" y="638" text-anchor="middle">One session per task</text><text class="d" x="190" y="655" text-anchor="middle">run or held; at most three run at once</text><text class="d" x="190" y="670" text-anchor="middle">model tier picked per task</text><text class="b" x="282" y="624" text-anchor="end">Claude Code</text></g>
+  <line class="ln" x1="190" y1="680" x2="190" y2="746" marker-end="url(#a)"/><text class="lbl" x="200" y="738">card started = linked session</text>
   <polyline class="ln back" points="90,648 40,648 40,432 78,432" marker-end="url(#am)"/>
   <text class="lbl" transform="rotate(-90 34 560)" x="34" y="560" text-anchor="middle">replan: spec changed, remaining tasks rewritten</text>
 
+  <!-- Plan board -->
+  <g class="n tl"><rect x="930" y="612" width="250" height="68" rx="4"/><text class="t" x="1055" y="638" text-anchor="middle">plan board</text><text class="d" x="1055" y="655" text-anchor="middle">/fabreak:board: live, read-only kanban</text><text class="d" x="1055" y="670" text-anchor="middle">plan ticks, session steps, worktrees, PRs</text><text class="b" x="1172" y="624" text-anchor="end">app pane</text></g>
+  <line class="ln soft" x1="1150" y1="746" x2="1150" y2="682" marker-end="url(#a)"/>
+  <text class="lbl" x="1142" y="712" text-anchor="end">progress, live</text>
+
   <!-- Loop C -->
-  <g class="n sp"><rect x="90" y="748" width="200" height="64" rx="4"/><text class="t" x="190" y="774" text-anchor="middle">using-git-worktrees</text><text class="d" x="190" y="794" text-anchor="middle">the app gives each session a worktree</text><text class="b" x="282" y="760" text-anchor="end">SP</text></g>
+  <g class="n sp"><rect x="90" y="748" width="200" height="64" rx="4"/><text class="t" x="190" y="772" text-anchor="middle">using-git-worktrees</text><text class="d" x="190" y="789" text-anchor="middle">the app gives each card a worktree</text><text class="d" x="190" y="804" text-anchor="middle">a woken held card syncs first</text><text class="b" x="282" y="760" text-anchor="end">SP</text></g>
   <g class="tag"><rect x="98" y="741" width="196" height="14" rx="3"/><text x="103" y="751">fix · refactor · upgrade · docs-only</text></g>
-  <g class="n mp"><rect x="320" y="748" width="200" height="64" rx="4"/><text class="t" x="420" y="770" text-anchor="middle">implement in session</text><text class="d" x="420" y="786" text-anchor="middle">the card session is the implementer</text><text class="d" x="420" y="801" text-anchor="middle">tdd at the plan's seams</text><text class="b" x="512" y="760" text-anchor="end">MP</text></g>
+  <g class="n mp"><rect x="320" y="748" width="200" height="64" rx="4"/><text class="t" x="420" y="770" text-anchor="middle">implement in session</text><text class="d" x="420" y="786" text-anchor="middle">the card session, tdd at the seams</text><text class="d" x="420" y="801" text-anchor="middle">screens: frontend-design + canvas</text><text class="b" x="512" y="760" text-anchor="end">MP+AN</text></g>
   <g class="n sp"><rect x="550" y="748" width="200" height="64" rx="4"/><text class="t" x="650" y="770" text-anchor="middle">verification-before-</text><text class="t" x="650" y="785" text-anchor="middle">completion</text><text class="d" x="650" y="801" text-anchor="middle">command evidence; upgrade: every target</text><text class="b" x="742" y="760" text-anchor="end">SP</text></g>
-  <g class="n mp"><rect x="780" y="748" width="200" height="64" rx="4"/><text class="t" x="880" y="770" text-anchor="middle">code-review</text><text class="d" x="880" y="786" text-anchor="middle">Standards + Spec from the plan task</text><text class="d" x="880" y="801" text-anchor="middle">refactor: Spec = tests/ unchanged</text><text class="b" x="972" y="760" text-anchor="end">MP+SP</text></g>
+  <g class="n mp"><rect x="780" y="748" width="200" height="64" rx="4"/><text class="t" x="880" y="770" text-anchor="middle">code-review</text><text class="d" x="880" y="786" text-anchor="middle">Standards + Spec from the plan task</text><text class="d" x="880" y="801" text-anchor="middle">load-bearing findings block</text><text class="b" x="972" y="760" text-anchor="end">MP+SP</text></g>
   <g class="n sp"><rect x="1010" y="748" width="200" height="64" rx="4"/><text class="t" x="1110" y="770" text-anchor="middle">finishing-a-</text><text class="t" x="1110" y="785" text-anchor="middle">development-branch</text><text class="d" x="1110" y="801" text-anchor="middle">green suite, then PR or MR</text><text class="b" x="1202" y="760" text-anchor="end">SP</text></g>
   <line class="ln" x1="290" y1="780" x2="318" y2="780" marker-end="url(#a)"/>
   <line class="ln" x1="520" y1="780" x2="548" y2="780" marker-end="url(#a)"/>
@@ -115,10 +123,10 @@
   <line class="ln" x1="650" y1="812" x2="650" y2="850" marker-end="url(#a)"/><text class="lbl" x="660" y="836">fails</text>
   <line class="ln soft" x1="1110" y1="812" x2="1110" y2="836"/>
   <polyline class="ln" points="1110,836 1110,940 220,940 220,958" marker-end="url(#a)"/>
-  <text class="lbl" x="660" y="934" text-anchor="middle">PR or MR; card moves to Review</text>
+  <text class="lbl" x="660" y="934" text-anchor="middle">PR or MR; the board shows Review</text>
 
   <!-- Bottom rows -->
-  <g class="n tl"><rect x="90" y="960" width="260" height="56" rx="4"/><text class="t" x="220" y="983" text-anchor="middle">PR/MR → CI → merge</text><text class="d" x="220" y="1001" text-anchor="middle">GitHub, GitLab or Bitbucket; green; task ticked</text><text class="b" x="342" y="972" text-anchor="end">git host</text></g>
+  <g class="n tl"><rect x="90" y="960" width="260" height="56" rx="4"/><text class="t" x="220" y="983" text-anchor="middle">PR/MR → CI → merge</text><text class="d" x="220" y="1001" text-anchor="middle">CI or local evidence; tick; held cards wake</text><text class="b" x="342" y="972" text-anchor="end">git host</text></g>
   <g class="n tl"><rect x="400" y="960" width="260" height="56" rx="4"/><text class="t" x="530" y="983" text-anchor="middle">release</text><text class="d" x="530" y="1001" text-anchor="middle">version, changelog, tag, evidence/</text><text class="b" x="652" y="972" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="408" y="953" width="48" height="14" rx="3"/><text x="413" y="963">release</text></g>
   <g class="n tl"><rect x="710" y="960" width="260" height="56" rx="4"/><text class="t" x="840" y="983" text-anchor="middle">handover</text><text class="d" x="840" y="1001" text-anchor="middle">UAT with the client, evidence, closing note, access</text><text class="b" x="962" y="972" text-anchor="end">tools</text></g>
