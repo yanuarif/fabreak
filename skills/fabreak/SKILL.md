@@ -49,7 +49,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` only after the entry is chos
 | docs-only | documentation changes only |
 | replan | the spec changed while plan tasks remain |
 | release | every plan card is Done and the default branch is green |
-| closing | handover to a client: UAT, evidence, access |
+| closing | handover to a client: e2e evidence, UAT sign-off, access |
 | triage | issues, a red default branch or an intake hook to sort into cards |
 
 ## Rules for every entry
