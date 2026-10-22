@@ -50,7 +50,7 @@ Every development request starts with /fabreak
 | `/fabreak:docs-only` | documentation changes only |
 | `/fabreak:replan` | the spec changed while plan tasks remain |
 | `/fabreak:release` | every plan card is Done and the default branch is green |
-| `/fabreak:closing` | handover to a client: UAT, evidence, access |
+| `/fabreak:closing` | handover to a client: e2e evidence, the client's UAT sign-off, access |
 | `/fabreak:triage` | open issues, a red default branch or a repository's intake hook to sort into cards |
 | `/fabreak:board` | open the live, read-only plan board in the preview pane |
 
