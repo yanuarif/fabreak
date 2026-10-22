@@ -16,6 +16,8 @@ Only the PR/MR → CI → merge box depends on the git host.
 
 A repository with a remote but no CI reports no checks and no runs (`gh pr checks` exits 1 with "no checks reported", `gh run list` prints nothing); loop.md step 3's summary lines and exit codes stand in for CI green, and the PR or MR body carries them.
 
+**CI that never started.** A repository with CI whose checks on the head commit all failed before any job ran counts as without CI for loop.md step 6. On GitHub: `gh pr checks` lists them as failed in 0 s, and `gh run view <run id>` (ids from `gh run list --branch <branch>`) shows an ANNOTATIONS block saying the job was not started, for failed payments or a spending limit; a run whose conclusion is `startup_failure` counts too. No run at all for the head commit, while a workflow exists for pull requests, is waited on for 10 minutes, then counts too. On GitLab: no job of the pipeline ran, and its `failure_reason` says why (such as `ci_quota_exceeded`); a pipeline that failed in a job is red CI, not this. The PR or MR body quotes that annotation beside the step 3 lines.
+
 A missing or logged-out CLI (`gh auth status`, `glab auth status`) is a human step: mattpocock-skills:wizard.
 
 Default branch: `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/` prefix removed; when that prints nothing (origin/HEAD unset, common after `gh repo create`), `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` on GitHub, `glab repo view -F json` on GitLab, falling back to `main`.
