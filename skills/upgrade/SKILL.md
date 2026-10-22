@@ -16,7 +16,7 @@ A dependency, runtime or platform version jump. One card per jump: a major, a mi
 ## Steps
 
 1. Read the upgrade's changelog or migration guide (mattpocock-skills:research when it spans several sources). The card brief lists every breaking change that touches this repo and every build target.
-2. loop.md, with step 3's verification = the whole suite plus a build of every target (each platform, each flavour); the summary line of each run is printed. Spec source = the list of breaking changes.
+2. loop.md, with step 3's verification = the whole suite plus a build of every target (each platform, each flavour) and the dependency audit (loop.md, Dependency audit); the summary line of each run is printed. Spec source = the list of breaking changes.
 3. When a build or the suite breaks: superpowers:systematic-debugging, with a red test for every behaviour change the upgrade introduced.
 4. Store or console changes (a new minimum OS, an SDK requirement, a signing change): mattpocock-skills:wizard for the owner; the session waits until it reports done.
 

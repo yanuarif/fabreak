@@ -89,6 +89,33 @@ class BodyAndDepends(unittest.TestCase):
         self.assertEqual(tasks[1]["depends"], [1, 3])
 
 
+class Metrics(unittest.TestCase):
+    def test_parse_duration(self):
+        self.assertEqual(pb.parse_duration("2d3h"), 2 * 1440 + 180)
+        self.assertEqual(pb.parse_duration("3h10m"), 190)
+        self.assertEqual(pb.parse_duration("45m"), 45)
+        self.assertEqual(pb.parse_duration("0m"), 0)
+        self.assertIsNone(pb.parse_duration("soon"))
+        self.assertIsNone(pb.parse_duration(""))
+
+    def test_plan_form(self):
+        line = "lead 3h10m · work 1h40m · review 2 · load-bearing 3 · tier claude-sonnet-5-5"
+        self.assertEqual(pb.parse_metrics(line), {"lead": 190, "work": 100, "review": 2, "load_bearing": 3,
+                                                  "tier": "claude-sonnet-5-5"})
+
+    def test_progress_form_unknown_key_and_bad_value(self):
+        line = "started 2026-10-21T08:00Z · began 2026-10-21T09:10Z · review x · colour blue · load-bearing 0"
+        self.assertEqual(pb.parse_metrics(line), {"started": "2026-10-21T08:00Z", "began": "2026-10-21T09:10Z",
+                                                  "load_bearing": 0})
+
+    def test_parse_plan_takes_the_first_line_outside_a_fence(self):
+        text = ("# P\n\n### Task 1: A\n\n```text\nMetrics: review 9\n```\n\n- [x] one\n\n"
+                "Metrics: lead 45m · review 1\nMetrics: review 5\n\n### Task 2: B\n\n- [ ] two\n")
+        tasks = pb.parse_plan(text)["tasks"]
+        self.assertEqual(tasks[0]["metrics"], {"lead": 45, "review": 1})
+        self.assertIsNone(tasks[1]["metrics"])
+
+
 def task(number, title, ticks=()):
     return {"number": number, "title": title, "steps": [{"text": "s", "done": t} for t in ticks]}
 
@@ -338,6 +365,38 @@ class GitSource(unittest.TestCase):
             self.assertEqual(two["status"], "in_progress")
             self.assertFalse(two["live"]["dirty"])
 
+    def test_metrics_from_the_progress_file_until_the_plan_has_a_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            plans = repo / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            plan = plans / "2026-10-21-demo.md"
+            plan.write_text(PLAN_TEXT, encoding="utf-8")
+            git(repo, "init", "-q", "-b", "main")
+            git(repo, "add", ".")
+            git(repo, "commit", "-q", "-m", "plan")
+            wt = Path(tmp) / "wt"
+            git(repo, "worktree", "add", "-q", "-b", "feat/02-short-a1b2c3", str(wt))
+            path = subprocess.run(["git", "rev-parse", "--git-path", "fabreak-steps.md"], cwd=wt,
+                                  check=True, capture_output=True, text=True).stdout.strip()
+            (wt / path).write_text("### Task 2: Task two title\n\nMetrics: started 2026-10-21T08:00Z · review 1 · "
+                                   "load-bearing 2 · tier claude-sonnet-5-5\n\n- [/] two\n", encoding="utf-8")
+
+            def board():
+                return pb.load_board(repo, data={"git": pb.read_git(repo), "prs": None})
+
+            one, two = board()["tasks"]
+            self.assertIsNone(one["metrics"])
+            self.assertEqual(two["metrics"], {"started": "2026-10-21T08:00Z", "review": 1, "load_bearing": 2,
+                                              "tier": "claude-sonnet-5-5", "source": "live"})
+            self.assertEqual(board()["summary"]["measured"], 0)
+
+            plan.write_text(PLAN_TEXT + "\nMetrics: lead 2h · work 1h · review 2 · load-bearing 2 · tier claude-sonnet-5-5\n",
+                            encoding="utf-8")
+            two = board()["tasks"][1]
+            self.assertEqual(two["metrics"]["source"], "plan")
+            self.assertEqual(two["metrics"]["lead"], 120)
+
     def test_not_a_repository_top_level(self):
         self.assertIsNone(pb.read_git(FIXTURE))
 
@@ -411,6 +470,27 @@ class LoadBoard(unittest.TestCase):
     def test_unknown_plan_falls_back_to_default(self):
         board = pb.load_board(FIXTURE, "nope.md")
         self.assertEqual(board["plan"], "2026-10-01-todo-api.md")
+
+    def test_summary(self):
+        text = ("# P\n\n### Task 1: A\n\n- [x] one\n\nMetrics: lead 3h · work 1h · review 2 · load-bearing 3 · tier claude-opus-5-5\n\n"
+                "### Task 2: B\n\n- [x] two\n\nMetrics: lead 1h · work 30m · review 1 · load-bearing 0 · tier claude-sonnet-5-5\n\n"
+                "### Task 3: C\n\n- [ ] three\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            plans = Path(tmp) / "docs" / "superpowers" / "plans"
+            plans.mkdir(parents=True)
+            (plans / "2026-10-21-demo.md").write_text(text, encoding="utf-8")
+            board = pb.load_board(tmp)
+        self.assertEqual(board["tasks"][0]["metrics"], {"lead": 180, "work": 60, "review": 2, "load_bearing": 3,
+                                                        "tier": "claude-opus-5-5", "source": "plan"})
+        self.assertIsNone(board["tasks"][2]["metrics"])
+        self.assertEqual(board["summary"], {"tasks": 3, "done": 2, "measured": 2, "lead": 60, "work": 30,
+                                            "review": 3, "load_bearing": 3,
+                                            "tiers": {"claude-opus-5-5": 1, "claude-sonnet-5-5": 1}})
+
+    def test_summary_without_metrics(self):
+        summary = pb.load_board(FIXTURE)["summary"]
+        self.assertEqual(summary, {"tasks": 3, "done": 1, "measured": 0, "lead": None, "work": None,
+                                   "review": 0, "load_bearing": 0, "tiers": {}})
 
     def test_root_without_plans(self):
         board = pb.load_board(ROOT / "tests" / "fixtures" / "new-empty")
@@ -506,6 +586,7 @@ class Server(unittest.TestCase):
             self.assertIn(heading, html)
         self.assertIn("/api/events", html)
         self.assertIn("/api/stop", html)
+        self.assertIn('id="summary"', html)
         self.assertIn("no plan found under docs/superpowers/plans", html)
 
     def test_not_found(self):
