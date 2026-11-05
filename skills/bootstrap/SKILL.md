@@ -11,11 +11,11 @@ Entry `bootstrap` of fabreak. The router, `${CLAUDE_PLUGIN_ROOT}/skills/fabreak/
 
 ## When
 
-A repo needs `CLAUDE.md`, pre-commit and branch protection, and CI when the owner wants it: the first repo of a new product, a takeover, or an existing repo that lacks them. Runs once per repo.
+A repo needs `CLAUDE.md`, pre-commit and branch protection, and CI when the owner wants it: the first repo of a new product, a takeover, or an existing repo that lacks them. Runs once per repo. A repo that started from a template (`new` step 2) may already have some of these files: each step checks for its file first and fills only what is missing, and step 2's question is asked only when no CI file exists.
 
 ## Steps
 
-1. mattpocock-skills:writing-for-agents: `CLAUDE.md` with build, test, run and lint commands, the host's PR or MR rules, any stack-specific verification hook (named so loop.md step 3 finds it), and the line `Every development request starts with /fabreak`.
+1. mattpocock-skills:writing-for-agents: `CLAUDE.md` with build, test, run and lint commands, the host's PR or MR rules, any stack-specific verification hook (named so loop.md step 3 finds it), and the line `Every development request starts with /fabreak`. When a spec's `## Stack` section names a stack profile, its Commands and Gotchas are the starting lines, checked against the repo before they are written.
 2. CI, optional: one question in the app's question tool, write a CI workflow or not. With CI: one workflow that runs the suite on every PR or MR, in the host's format (hosting.md): `.github/workflows/ci.yml`, `.gitlab-ci.yml`, or `bitbucket-pipelines.yml`; done when a pushed branch shows a status. Without CI: no CI file, and `CLAUDE.md` gets the line `No CI: the local suite run (loop.md step 3) stands in for CI green`; done when that line is committed.
 3. Pre-commit: a hook that runs the lint and test commands from `CLAUDE.md`. With `package.json`, husky plus lint-staged; otherwise `.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`.
 4. mattpocock-skills:wizard for the owner's steps: branch protection (hosting.md, Branch protection), CI secrets when step 2 wrote CI, any store or deploy credential. The session waits until the wizard reports done.
