@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, lane B for a legacy takeover; screens are approved on a Claude Design canvas before the spec; after a card round every plan task becomes its own session, run or held, then loop C: worktree, implement, verify with a dependency audit, review on Standards, Spec and Security, finish; the live plan board shows steps, metrics, worktrees and PRs; then PR or MR, merge without a question when the gates hold, tick with a metrics line, release, closing; triage turns red CI, open issues and an intake hook into cards, on a weekday schedule; back edges for review findings, replan and hotfix.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, started from the owner's template repo and stack profile when one fits, lane B for a legacy takeover; screens are approved on a Claude Design canvas before the spec; after a card round every plan task becomes its own session, run or held, then loop C: worktree, implement, verify with a dependency audit, review on Standards, Spec and Security, finish; the live plan board shows steps, metrics, worktrees and PRs; then PR or MR, merge without a question when the gates hold, tick with a metrics line, release with a stack profile for the next new product, closing; triage turns red CI, open issues and an intake hook into cards, on a weekday schedule; back edges for review findings, replan and hotfix.">
   <style>
     .n rect { fill: #ffffff; stroke-width: 1.6; }
     .sp rect { stroke: #0f766e; } .mp rect { stroke: #b45309; } .an rect { stroke: #6d28d9; }
@@ -129,7 +129,7 @@
 
   <!-- Bottom rows -->
   <g class="n tl"><rect x="90" y="960" width="260" height="56" rx="4"/><text class="t" x="220" y="983" text-anchor="middle">PR/MR → CI → merge</text><text class="d" x="220" y="1001" text-anchor="middle">gates hold: merge unasked; tick + metrics</text><text class="b" x="342" y="972" text-anchor="end">git host</text></g>
-  <g class="n tl"><rect x="400" y="960" width="260" height="56" rx="4"/><text class="t" x="530" y="983" text-anchor="middle">release</text><text class="d" x="530" y="1001" text-anchor="middle">version, changelog, tag, evidence/</text><text class="b" x="652" y="972" text-anchor="end">tools</text></g>
+  <g class="n tl"><rect x="400" y="960" width="260" height="56" rx="4"/><text class="t" x="530" y="983" text-anchor="middle">release</text><text class="d" x="530" y="1001" text-anchor="middle">version, changelog, tag, evidence/, stack profile</text><text class="b" x="652" y="972" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="408" y="953" width="48" height="14" rx="3"/><text x="413" y="963">release</text></g>
   <g class="n tl"><rect x="710" y="960" width="260" height="56" rx="4"/><text class="t" x="840" y="983" text-anchor="middle">handover</text><text class="d" x="840" y="1001" text-anchor="middle">e2e evidence, client UAT sign-off, access</text><text class="b" x="962" y="972" text-anchor="end">tools</text></g>
   <g class="tag"><rect x="718" y="953" width="48" height="14" rx="3"/><text x="723" y="963">closing</text></g>
@@ -141,7 +141,7 @@
   <polyline class="ln" points="840,1016 840,1032 600,1032 600,1048" marker-end="url(#a)"/>
   <line class="ln" x1="660" y1="1078" x2="708" y2="1078" marker-end="url(#a)"/><text class="lbl" x="684" y="1070" text-anchor="middle">lessons</text>
   <polyline class="ln" points="970,1078 1225,1078 1225,68 1202,68" marker-end="url(#a)"/>
-  <text class="lbl" x="1218" y="112" text-anchor="end">CLAUDE.md and skills feed the next fabreak run</text>
+  <text class="lbl" x="1218" y="112" text-anchor="end">CLAUDE.md, skills and stack profiles feed the next fabreak run</text>
   <polyline class="ln back" points="420,1016 420,1036 60,1036 60,780 88,780" marker-end="url(#am)"/>
   <text class="lbl" x="240" y="1030" text-anchor="middle">hotfix: release branch first, then backport to main</text>
 </svg>

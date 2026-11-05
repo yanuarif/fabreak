@@ -91,6 +91,23 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Changes reach the page over Server-Sent Events. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. The page has search (`/`), column filters, keyboard navigation, a plan picker when there are several plans, and an activity log.
 - The server listens on 127.0.0.1 only, on a port derived from the repository path, and writes nothing. It stops when the session that started it ends, or from the page's Stop button.
 
+## Stack templates
+
+Two files in your own folder, `~/.claude/fabreak/`, carry what one product teaches the next. fabreak ships no templates; both files stay out of every repository.
+
+- `templates.md`, written by you: one table row per template repo you own.
+
+  ```markdown
+  | Stack | Repo | Fits |
+  |---|---|---|
+  | nextjs-postgres | https://git.example.com/me/nextjs-postgres-template | web app with accounts and a relational database |
+  ```
+
+  After grilling, `/fabreak:new` offers the templates whose Stack and Fits match the product (up to three, plus "Start empty"), copies the one you pick into the repository without its git history, keeping any file the repository already has, and brainstorms from there. The spec records the template and its commit in a `## Stack` section.
+- `stacks/<stack>.md`, written by `/fabreak:release` after the tag: the stack's commands, folder structure, decisions with the alternatives they beat, and the gotchas from `CLAUDE.md`, merged with what earlier releases wrote. Stack facts only: no product, client or domain names, no secrets, hosts or environment values. The next `new` on the same stack reads it as brainstorming input: defaults you can override, never copied code. `bootstrap` starts `CLAUDE.md` from its commands and gotchas.
+
+A profile and a template with the same Stack key belong together.
+
 ## Layout
 
 ```
