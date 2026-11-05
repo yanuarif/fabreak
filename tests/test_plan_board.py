@@ -584,8 +584,9 @@ class Server(unittest.TestCase):
         self.assertIn("<!doctype html>", html.lower())
         for heading in ("Backlog", "In progress", "Review", "Done"):
             self.assertIn(heading, html)
-        self.assertIn("/api/events", html)
-        self.assertIn("/api/stop", html)
+        self.assertIn('"api/events', html)
+        self.assertIn('"api/stop"', html)
+        self.assertNotIn('"/api/', html)
         self.assertIn('id="summary"', html)
         self.assertIn("no plan found under docs/superpowers/plans", html)
 
@@ -611,6 +612,187 @@ class Main(unittest.TestCase):
         free_port = probe.server_address[1]
         probe.server_close()
         self.assertIsNone(pb.healthz(free_port))
+
+
+METRICS_PLAN = ("# Demo\n\n### Task 1: A\n\n- [x] one\n\nMetrics: lead 3h · review 1 · load-bearing 2\n\n"
+                "### Task 2: B\n\n- [x] two\n\nMetrics: lead 1h · load-bearing 1\n\n"
+                "### Task 3: C\n\n- [x] three\n- [ ] four\n\n### Task 4: D\n\n- [ ] five\n\n### Task 5: E\n\n- [ ] six\n")
+
+
+def plans_repo(root, text=PLAN_TEXT):
+    plans = Path(root) / "docs" / "superpowers" / "plans"
+    plans.mkdir(parents=True)
+    (plans / "2026-10-21-demo.md").write_text(text, encoding="utf-8")
+    return Path(root).resolve()
+
+
+def resolved(path):
+    return str(Path(path).expanduser().resolve())
+
+
+class ReadRepos(unittest.TestCase):
+    def test_lines_paths_and_errors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repos = Path(tmp) / "repos.md"
+            repos.write_text("# Repositories\n\n- /srv/a\n- ~/b\n- rel/c\nsome note\n- /srv/a\n  - /srv/indented\n"
+                             "- /srv/d/\n", encoding="utf-8")
+            found = pb.read_repos(repos)
+        self.assertEqual(found["repos"], [resolved("/srv/a"), resolved("~/b"), resolved("/srv/d")])
+        self.assertEqual(found["errors"], ["rel/c: not an absolute path"])
+
+    def test_missing_file_is_empty(self):
+        self.assertEqual(pb.read_repos(ROOT / "does-not-exist.md"), {"repos": [], "errors": []})
+
+    def test_repo_key_is_stable_hex(self):
+        key = pb.repo_key("/srv/a")
+        self.assertRegex(key, r"^[0-9a-f]{8}$")
+        self.assertEqual(key, pb.repo_key("/srv/a"))
+        self.assertNotEqual(key, pb.repo_key("/srv/b"))
+
+
+class PortfolioRow(unittest.TestCase):
+    def test_counts_from_the_board(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = plans_repo(Path(tmp) / "todo-api", METRICS_PLAN)
+            row = pb.portfolio_row(repo, {"git": None, "prs": [pr(9, "Task 5: E")]})
+        self.assertEqual(row["key"], pb.repo_key(str(repo)))
+        self.assertEqual((row["name"], row["path"]), ("todo-api", str(repo)))
+        self.assertEqual((row["plan"], row["title"], row["open"]), ("2026-10-21-demo.md", "Demo", True))
+        self.assertEqual((row["done"], row["tasks"]), (2, 5))
+        self.assertEqual((row["running"], row["review"]), (2, 1))
+        self.assertEqual((row["lead"], row["load_bearing"]), (60, 3))
+        self.assertEqual(row["sources"], {"git": False, "prs": True, "default": None})
+        self.assertIsNone(row["error"])
+
+    def test_all_done_is_not_open(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = plans_repo(tmp, PLAN_TEXT.replace("- [ ]", "- [x]"))
+            row = pb.portfolio_row(repo)
+        self.assertFalse(row["open"])
+        self.assertEqual((row["done"], row["tasks"], row["running"]), (2, 2, 0))
+
+    def test_no_plan(self):
+        row = pb.portfolio_row(ROOT / "tests" / "fixtures" / "new-empty")
+        self.assertEqual((row["plan"], row["title"], row["open"]), (None, "", False))
+        self.assertEqual((row["done"], row["tasks"], row["running"], row["lead"]), (0, 0, 0, None))
+
+    def test_missing_path(self):
+        row = pb.portfolio_row(ROOT / "does-not-exist")
+        self.assertEqual(row["error"], "not found")
+        self.assertEqual(row["name"], "does-not-exist")
+        self.assertIsNone(row["plan"])
+        self.assertIsNone(row["tasks"])
+
+
+class LoadPortfolio(unittest.TestCase):
+    def test_rows_errors_and_totals(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a = plans_repo(Path(tmp) / "a", METRICS_PLAN)
+            b = plans_repo(Path(tmp) / "b", PLAN_TEXT.replace("- [ ]", "- [x]"))
+            repos = Path(tmp) / "repos.md"
+            repos.write_text(f"- {a}\n- {b}\n- {Path(tmp) / 'gone'}\n- relative\n", encoding="utf-8")
+            snap = pb.load_portfolio(repos, {str(a): {"git": None, "prs": [pr(9, "Task 5: E")]}})
+        self.assertEqual(snap["file"], str(repos.resolve()))
+        self.assertEqual([r["name"] for r in snap["rows"]], ["a", "b", "gone"])
+        self.assertEqual(snap["errors"], ["relative: not an absolute path"])
+        self.assertEqual(snap["totals"], {"repos": 3, "open": 1, "running": 2, "load_bearing": 3})
+
+    def test_missing_file(self):
+        snap = pb.load_portfolio(ROOT / "does-not-exist.md")
+        self.assertEqual((snap["rows"], snap["errors"]), ([], []))
+        self.assertEqual(snap["totals"], {"repos": 0, "open": 0, "running": 0, "load_bearing": 0})
+
+
+def read_data(stream, name):
+    """The JSON of the next event called `name` on an open SSE response."""
+    event, data = None, []
+    while True:
+        line = stream.readline().decode("utf-8").rstrip("\n")
+        if line.startswith("event: "):
+            event, data = line[7:], []
+        elif line.startswith("data: "):
+            data.append(line[6:])
+        elif line == "" and event == name and data:
+            return json.loads("\n".join(data))
+
+
+class PortfolioServer(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = plans_repo(Path(self.tmp.name) / "todo-api")
+        self.other = plans_repo(Path(self.tmp.name) / "invoicing")
+        self.repos = Path(self.tmp.name) / "repos.md"
+        self.repos.write_text(f"- {self.repo}\n", encoding="utf-8")
+        folio = pb.Portfolio(self.repos, every=0.05, git=False, prs=False, plan_every=0.05)
+        self.server = pb.make_portfolio_server(self.repos, 0, portfolio=folio)
+        self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.server_close()
+        self.tmp.cleanup()
+
+    def get(self, path):
+        with urlopen(self.base + path, timeout=3) as r:
+            return r.headers.get("Content-Type", ""), r.read()
+
+    def test_healthz_reports_the_repos_file(self):
+        _, body = self.get("/healthz")
+        self.assertEqual(json.loads(body), {"root": str(self.repos.resolve()), "api": pb.API, "portfolio": True})
+
+    def test_snapshot_and_page(self):
+        _, body = self.get("/api/portfolio")
+        self.assertEqual([r["name"] for r in json.loads(body)["rows"]], ["todo-api"])
+        ctype, page = self.get("/")
+        self.assertTrue(ctype.startswith("text/html"))
+        self.assertIn("Portfolio", page.decode("utf-8"))
+        self.assertIn('"api/events"', page.decode("utf-8"))
+
+    def test_a_row_opens_its_board(self):
+        key = pb.repo_key(str(self.repo))
+        _, body = self.get(f"/r/{key}/api/board")
+        board = json.loads(body)
+        self.assertEqual((board["root"], board["plan"]), (str(self.repo), "2026-10-21-demo.md"))
+        _, page = self.get(f"/r/{key}/")
+        self.assertIn("Backlog", page.decode("utf-8"))
+        stream = urlopen(f"{self.base}/r/{key}/api/events", timeout=5)
+        self.assertEqual(read_data(stream, "board")["root"], str(self.repo))
+        stream.close()
+
+    def test_unknown_key_and_nested_stop_are_not_found(self):
+        for path in ("/r/00000000/api/board", "/r/00000000/", "/nothing"):
+            with self.assertRaises(HTTPError) as cm:
+                self.get(path)
+            self.assertEqual(cm.exception.code, 404)
+        key = pb.repo_key(str(self.repo))
+        req = Request(f"{self.base}/r/{key}/api/stop", method="POST", headers={"X-Plan-Board": "stop"})
+        with self.assertRaises(HTTPError) as cm:
+            urlopen(req, timeout=2)
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_event_when_repos_file_and_a_plan_change(self):
+        stream = urlopen(self.base + "/api/events", timeout=5)
+        self.assertEqual(len(read_data(stream, "portfolio")["rows"]), 1)
+        self.repos.write_text(f"- {self.repo}\n- {self.other}\n", encoding="utf-8")
+        self.assertEqual(len(read_data(stream, "portfolio")["rows"]), 2)
+        plan = self.other / "docs" / "superpowers" / "plans" / "2026-10-21-demo.md"
+        plan.write_text(PLAN_TEXT.replace("- [ ] one", "- [x] one"), encoding="utf-8")
+        self.assertEqual(read_data(stream, "portfolio")["rows"][1]["done"], 1)
+        stream.close()
+
+    def test_stop_ends_the_stream(self):
+        stream = urlopen(self.base + "/api/events", timeout=5)
+        read_data(stream, "portfolio")
+        req = Request(self.base + "/api/stop", method="POST", headers={"X-Plan-Board": "stop"})
+        with urlopen(req, timeout=2) as r:
+            self.assertEqual(json.loads(r.read()), {"stopping": True})
+        self.assertEqual(read_named_event(stream), "stopped")
+
+
+class PortfolioMain(unittest.TestCase):
+    def test_portfolio_port_is_outside_the_board_range(self):
+        self.assertEqual(pb.PORTFOLIO_PORT, 7900)
 
 
 if __name__ == "__main__":
