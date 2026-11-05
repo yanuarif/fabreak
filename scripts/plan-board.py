@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Plan board: a read-only, live kanban view of docs/superpowers/plans/*.md.
 
-Usage: plan-board.py [--root DIR] [--port N] [--verbose]
+Usage: plan-board.py [--root DIR] [--port N] [--verbose] [--watch-pid PID]
+       plan-board.py --portfolio [--repos FILE] [--port N] [--verbose] [--watch-pid PID]
 
 Serves one page on 127.0.0.1 that shows every task of a plan in Backlog,
 In progress, Review or Done, from the plan's steps (ticked in the plan or
@@ -9,6 +10,10 @@ in the task's own worktree), the repository's worktrees (git) and its pull
 requests (gh, when present). A poller thread
 watches all three and pushes each change to the page over Server-Sent
 Events. Writes nothing. Standard library only.
+
+With --portfolio it serves one page across the repositories listed in
+~/.claude/fabreak/repos.md (`- /path/to/repo` lines), a row each, and each
+repository's board under /r/<key>/, from one poller per repository.
 """
 import argparse
 import json
@@ -44,6 +49,9 @@ API = 5
 GIT_TIMEOUT = 5
 GH_TIMEOUT = 15
 PING_EVERY = 15
+PORTFOLIO_PORT = 7900
+REPOS_FILE = Path("~/.claude/fabreak/repos.md")
+REPO_LINE_RE = re.compile(r"^- (.+?)\s*$")
 
 
 def port_for(root):
@@ -493,14 +501,7 @@ class Live:
                 self.cond.notify_all()
 
 
-PAGE = r"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plan board</title>
-<style>
-  :root {
+TOKENS = """  :root {
     --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e3e1dc; --soft: #efede8;
     --backlog: #8a8f98; --progress: #d98b1f; --review: #6f63d9; --done: #3a9d5d; --tick: #3a9d5d;
     --accent: #2f6fdb; --flash: #fff4d6; --warn: #b5651d;
@@ -509,6 +510,16 @@ PAGE = r"""<!doctype html>
     :root { --bg: #161615; --panel: #1f1f1d; --ink: #ecebe7; --muted: #9c9a94; --line: #2e2e2b; --soft: #272725;
             --accent: #6f9bff; --flash: #3a3320; --warn: #e09a55; }
   }
+"""
+
+PAGE = r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan board</title>
+<style>
+/*TOKENS*/
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
          font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -530,7 +541,9 @@ PAGE = r"""<!doctype html>
   #stop { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 2px 9px;
           font-size: 12px; color: var(--muted); cursor: pointer; }
   #stop:hover { color: var(--warn); border-color: currentColor; }
-  #stop[hidden] { display: none; }
+  #stop[hidden], #back[hidden] { display: none; }
+  #back { font-size: 12px; color: var(--accent); text-decoration: none; }
+  #back:hover { text-decoration: underline; }
   .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
   .tools input { flex: 1 1 220px; min-width: 0; background: var(--panel); border: 1px solid var(--line);
                  border-radius: 6px; padding: 5px 9px; }
@@ -612,6 +625,7 @@ PAGE = r"""<!doctype html>
 <body>
 <header>
   <div class="row">
+    <a id="back" href="/" hidden>← Portfolio</a>
     <span class="repo" id="repo"></span>
     <h1 id="title"></h1>
     <span class="live" id="live" role="status">Connecting</span>
@@ -675,6 +689,7 @@ PAGE = r"""<!doctype html>
     return row;
   }
   const EMPTY = "no plan found under docs/superpowers/plans";
+  const NESTED = /^\/r\/[0-9a-f]{8}\/$/.test(location.pathname);
   const params = new URLSearchParams(location.search);
   const state = {
     plan: params.get("plan") || "", q: params.get("q") || "",
@@ -702,7 +717,7 @@ PAGE = r"""<!doctype html>
 
   function setLive(mode) {
     const words = { connecting: "Connecting", live: "Live", retry: "Reconnecting",
-                    stopped: "Stopped · run /fabreak:board to start it again" };
+                    stopped: "Stopped · run /fabreak:" + (NESTED ? "portfolio" : "board") + " to start it again" };
     $("live").className = "live live-" + mode;
     $("live").textContent = words[mode];
   }
@@ -710,7 +725,7 @@ PAGE = r"""<!doctype html>
   function connect() {
     if (source) source.close();
     setLive("connecting");
-    source = new EventSource("/api/events" + (state.plan ? "?plan=" + encodeURIComponent(state.plan) : ""));
+    source = new EventSource("api/events" + (state.plan ? "?plan=" + encodeURIComponent(state.plan) : ""));
     source.addEventListener("open", function () { setLive("live"); });
     source.addEventListener("board", function (e) { setLive("live"); update(JSON.parse(e.data)); });
     source.addEventListener("stopped", stopped);
@@ -731,7 +746,7 @@ PAGE = r"""<!doctype html>
   async function stopServer() {
     $("stop").disabled = true;
     try {
-      await fetch("/api/stop", { method: "POST", headers: { "X-Plan-Board": "stop" } });
+      await fetch("api/stop", { method: "POST", headers: { "X-Plan-Board": "stop" } });
       stopped();
     } catch (e) { $("stop").disabled = false; }
   }
@@ -1044,24 +1059,292 @@ PAGE = r"""<!doctype html>
   setInterval(function () {
     if (state.board && state.board.tasks.some(function (t) { return t.metrics && t.metrics.source === "live"; })) render();
   }, 60000);
+  if (NESTED) { $("back").hidden = false; $("stop").hidden = true; }
   renderLog();
   connect();
 })();
 </script>
 </body>
 </html>
-"""
+""".replace("/*TOKENS*/\n", TOKENS)
+
+
+PORTFOLIO_PAGE = r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio</title>
+<style>
+/*TOKENS*/
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font: inherit; color: inherit; }
+  header { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+  header .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .file { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  #totals { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+  #totals b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  #totals:empty { display: none; }
+  .live { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--backlog); }
+  .live-live::before { background: var(--done); box-shadow: 0 0 0 3px color-mix(in srgb, var(--done) 25%, transparent); }
+  .live-retry::before { background: var(--progress); }
+  .live-stopped::before { background: var(--warn); }
+  #stop { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 2px 9px;
+          font-size: 12px; color: var(--muted); cursor: pointer; }
+  #stop:hover { color: var(--warn); border-color: currentColor; }
+  #stop[hidden] { display: none; }
+  main { padding: 12px 16px 24px; display: grid; gap: 8px; }
+  .repo { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; gap: 6px 16px; align-items: center;
+          background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+          color: inherit; text-decoration: none; transition: border-color .15s; }
+  a.repo:hover { border-color: var(--muted); }
+  a.repo:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .repo.flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: var(--flash); box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+  @media (prefers-reduced-motion: reduce) { .repo.flash { animation: none; border-color: var(--accent); } }
+  .repo.missing { opacity: .7; border-style: dashed; }
+  .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .path { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+  .plan { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plan.none { color: var(--muted); }
+  .progress { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .bar { flex: 1; height: 4px; border-radius: 2px; background: var(--soft); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--done); }
+  .count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+  .badge { font-size: 11px; border: 1px solid transparent; border-radius: 4px; padding: 0 5px; color: var(--muted);
+           background: var(--soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge.running { background: none; border: 1px dashed var(--progress); color: var(--ink); }
+  .badge.warn { background: none; color: var(--warn); border-color: currentColor; }
+  .empty { color: var(--muted); padding: 24px 0; text-align: center; }
+  .errors { color: var(--progress); font-size: 12px; }
+  .keys { font-size: 11px; color: var(--muted); padding: 0 16px 16px; }
+  @media (max-width: 720px) {
+    .repo { grid-template-columns: minmax(0, 1fr); }
+    .chips { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Portfolio</h1>
+    <span class="file" id="file"></span>
+    <span class="live" id="live" role="status">Connecting</span>
+    <button type="button" id="stop" title="Stop the portfolio server">Stop</button>
+  </div>
+  <p id="totals" aria-label="Totals"></p>
+</header>
+<main id="rows"></main>
+<p class="keys">A row opens that repository's board. <kbd>Tab</kbd> moves between rows, <kbd>Enter</kbd> opens one.</p>
+<script>
+(function () {
+  const state = { snap: null, flash: new Set(), stopped: false };
+  let source = null;
+  const $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function fmt(minutes) {
+    const parts = [[Math.floor(minutes / 1440), "d"], [Math.floor(minutes / 60) % 24, "h"], [minutes % 60, "m"]]
+      .filter(function (p) { return p[0] > 0; }).slice(0, 2);
+    return parts.length ? parts.map(function (p) { return p[0] + p[1]; }).join("") : "0m";
+  }
+  function setLive(mode) {
+    const words = { connecting: "Connecting", live: "Live", retry: "Reconnecting",
+                    stopped: "Stopped · run /fabreak:portfolio to start it again" };
+    $("live").className = "live live-" + mode;
+    $("live").textContent = words[mode];
+  }
+  function connect() {
+    if (source) source.close();
+    setLive("connecting");
+    source = new EventSource("api/events");
+    source.addEventListener("open", function () { setLive("live"); });
+    source.addEventListener("portfolio", function (e) { setLive("live"); update(JSON.parse(e.data)); });
+    source.addEventListener("stopped", stopped);
+    source.addEventListener("error", function () {
+      if (state.stopped) return;
+      setLive("retry");
+      if (source.readyState === EventSource.CLOSED) setTimeout(connect, 3000);
+    });
+  }
+  function stopped() {
+    state.stopped = true;
+    if (source) source.close();
+    $("stop").hidden = true;
+    setLive("stopped");
+  }
+  async function stopServer() {
+    $("stop").disabled = true;
+    try {
+      await fetch("api/stop", { method: "POST", headers: { "X-Plan-Board": "stop" } });
+      stopped();
+    } catch (e) { $("stop").disabled = false; }
+  }
+  function update(snap) {
+    const before = new Map((state.snap ? state.snap.rows : []).map(function (r) { return [r.key, JSON.stringify(r)]; }));
+    state.flash = new Set();
+    if (state.snap) snap.rows.forEach(function (r) { if (before.get(r.key) !== JSON.stringify(r)) state.flash.add(r.key); });
+    state.snap = snap;
+    render();
+  }
+  function totals(t) {
+    const p = $("totals");
+    p.replaceChildren();
+    if (!t.repos) return;
+    function item(value, label) {
+      const span = el("span"); span.appendChild(el("b", "", String(value))); span.appendChild(document.createTextNode(" " + label)); p.appendChild(span);
+    }
+    item(t.repos, t.repos === 1 ? "repository" : "repositories");
+    item(t.open, t.open === 1 ? "open plan" : "open plans");
+    item(t.running, t.running === 1 ? "card running" : "cards running");
+    item(t.load_bearing, "load-bearing");
+  }
+  function row(r) {
+    const missing = Boolean(r.error);
+    const a = el(missing ? "div" : "a", "repo" + (missing ? " missing" : "") + (state.flash.has(r.key) ? " flash" : ""));
+    if (!missing) a.href = "r/" + r.key + "/";
+    const who = el("div");
+    who.appendChild(el("div", "name", r.name));
+    const path = el("div", "path", "\u200e" + r.path + "\u200e"); path.title = r.path; who.appendChild(path);
+    a.appendChild(who);
+    const mid = el("div");
+    if (missing) mid.appendChild(el("div", "plan none", r.error));
+    else if (!r.plan) mid.appendChild(el("div", "plan none", "no plan"));
+    else {
+      const name = r.title || r.plan;
+      const plan = el("div", "plan" + (r.open ? "" : " none"), r.open ? name : "no open plan · " + name);
+      plan.title = r.plan; mid.appendChild(plan);
+      const prog = el("div", "progress"), bar = el("div", "bar"), fill = el("span");
+      fill.style.width = (r.tasks ? 100 * r.done / r.tasks : 0) + "%";
+      bar.appendChild(fill); prog.appendChild(bar);
+      prog.appendChild(el("span", "count", r.done + "/" + r.tasks + " done"));
+      mid.appendChild(prog);
+    }
+    a.appendChild(mid);
+    const chips = el("div", "chips");
+    if (!missing && r.plan) {
+      const run = el("span", "badge" + (r.running ? " running" : ""), r.running + " running" + (r.review ? " · " + r.review + " in review" : ""));
+      run.title = "cards In progress or in Review"; chips.appendChild(run);
+      if (r.lead !== null) { const b = el("span", "badge", "lead " + fmt(r.lead)); b.title = "median lead, card start to merge"; chips.appendChild(b); }
+      chips.appendChild(el("span", "badge" + (r.load_bearing ? " warn" : ""), r.load_bearing + " load-bearing"));
+    }
+    a.appendChild(chips);
+    a.setAttribute("aria-label", r.name + (missing ? ", " + r.error : r.plan ? ", " + r.done + " of " + r.tasks + " done, " + r.running + " running" : ", no plan"));
+    return a;
+  }
+  function render() {
+    const snap = state.snap;
+    $("file").textContent = snap.file;
+    totals(snap.totals);
+    const main = $("rows");
+    const focused = document.activeElement && document.activeElement.classList.contains("repo") ? document.activeElement.getAttribute("href") : null;
+    main.replaceChildren();
+    if (!snap.rows.length) {
+      main.appendChild(el("p", "empty", "No repositories in " + snap.file + ". /fabreak:bootstrap and /fabreak:new add the repository they set up; add others as \"- /path/to/repo\" lines."));
+    }
+    snap.rows.forEach(function (r) { main.appendChild(row(r)); });
+    if (snap.errors.length) main.appendChild(el("p", "errors", "skipped: " + snap.errors.join("; ")));
+    if (focused) { const f = main.querySelector('a.repo[href="' + focused + '"]'); if (f) f.focus({ preventScroll: true }); }
+  }
+  $("stop").addEventListener("click", stopServer);
+  connect();
+})();
+</script>
+</body>
+</html>
+""".replace("/*TOKENS*/\n", TOKENS)
+
+
+class Handler(BaseHTTPRequestHandler):
+    """Shared replies: JSON, plain bodies, an event stream and the stop endpoint."""
+    verbose = False
+
+    def log_message(self, fmt, *args):
+        if self.verbose:
+            super().log_message(fmt, *args)
+
+    def do_POST(self):
+        if urlparse(self.path).path != "/api/stop":
+            return self._send(404, "text/plain; charset=utf-8", b"not found\n")
+        if self.headers.get("X-Plan-Board") != "stop":
+            return self._send(403, "text/plain; charset=utf-8", b"missing X-Plan-Board: stop\n")
+        self._json({"stopping": True})
+        self.server.stop()
+
+    def _events(self, source, produce, name):
+        """Send `name` with produce()'s JSON now and after each change of `source`, until it stops."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        sent = None
+        head = b"event: " + name.encode("ascii") + b"\ndata: "
+        try:
+            while not source.stopped:
+                version = source.version
+                text = json.dumps(produce())
+                if text != sent:
+                    self.wfile.write(head + text.encode("utf-8") + b"\n\n")
+                    self.wfile.flush()
+                    sent = text
+                if source.wait(version, PING_EVERY) == version and not source.stopped:
+                    self.wfile.write(b": ping\n\n")
+                    self.wfile.flush()
+            self.wfile.write(b"event: stopped\ndata: {}\n\n")
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _json(self, obj):
+        self._send(200, "application/json", json.dumps(obj).encode("utf-8"))
+
+    def _not_found(self):
+        self._send(404, "text/plain; charset=utf-8", b"not found\n")
+
+    def _send(self, code, ctype, body, headers=None):
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        for k, v in (headers or {}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(body)
+
+
+class Server(ThreadingHTTPServer):
+    """A server on 127.0.0.1 whose `source` (a Live or a Portfolio) stops with it."""
+    daemon_threads = True
+
+    def __init__(self, port, handler, source):
+        self.source = source
+        super().__init__(("127.0.0.1", port), handler)
+
+    def stop(self):
+        """End every event stream, then serve_forever, from any thread."""
+        self.source.stop()
+        threading.Thread(target=self.shutdown, daemon=True).start()
+
+    def server_close(self):
+        self.source.stop()
+        super().server_close()
 
 
 def make_server(root, port, verbose=False, live=None):
     root = Path(root).resolve()
     live = live or Live(root)
 
-    class Handler(BaseHTTPRequestHandler):
-        def log_message(self, fmt, *args):
-            if verbose:
-                super().log_message(fmt, *args)
-
+    class BoardHandler(Handler):
         def do_GET(self):
             url = urlparse(self.path)
             plan = parse_qs(url.query).get("plan", [None])[0]
@@ -1070,66 +1353,200 @@ def make_server(root, port, verbose=False, live=None):
             if url.path == "/api/board":
                 return self._json(load_board(root, plan, live.data))
             if url.path == "/api/events":
-                return self._events(plan)
+                return self._events(live, lambda: load_board(root, plan, live.data), "board")
             if url.path == "/":
                 return self._send(200, "text/html; charset=utf-8", PAGE.encode("utf-8"))
-            self._send(404, "text/plain; charset=utf-8", b"not found\n")
+            self._not_found()
 
-        def do_POST(self):
-            if urlparse(self.path).path != "/api/stop":
-                return self._send(404, "text/plain; charset=utf-8", b"not found\n")
-            if self.headers.get("X-Plan-Board") != "stop":
-                return self._send(403, "text/plain; charset=utf-8", b"missing X-Plan-Board: stop\n")
-            self._json({"stopping": True})
-            self.server.stop()
-
-        def _events(self, plan):
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            sent = None
-            try:
-                while not live.stopped:
-                    version = live.version
-                    text = json.dumps(load_board(root, plan, live.data))
-                    if text != sent:
-                        self.wfile.write(b"event: board\ndata: " + text.encode("utf-8") + b"\n\n")
-                        self.wfile.flush()
-                        sent = text
-                    if live.wait(version, PING_EVERY) == version and not live.stopped:
-                        self.wfile.write(b": ping\n\n")
-                        self.wfile.flush()
-                self.wfile.write(b"event: stopped\ndata: {}\n\n")
-                self.wfile.flush()
-            except (BrokenPipeError, ConnectionResetError):
-                pass
-
-        def _json(self, obj):
-            self._send(200, "application/json", json.dumps(obj).encode("utf-8"))
-
-        def _send(self, code, ctype, body):
-            self.send_response(code)
-            self.send_header("Content-Type", ctype)
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-
-    class Server(ThreadingHTTPServer):
-        daemon_threads = True
-
-        def stop(self):
-            """End every event stream, then serve_forever, from any thread."""
-            live.stop()
-            threading.Thread(target=self.shutdown, daemon=True).start()
-
-        def server_close(self):
-            live.stop()
-            super().server_close()
-
-    server = Server(("127.0.0.1", port), Handler)
+    BoardHandler.verbose = verbose
+    server = Server(port, BoardHandler, live)
     server.live = live.start()
+    return server
+
+
+def repo_key(path):
+    """8 hex digits naming one repository in the portfolio's URLs."""
+    return "%08x" % zlib.crc32(str(path).encode("utf-8"))
+
+
+def read_repos(path):
+    """{repos, errors}: each `- <path>` line of the repos file, resolved, in order and once."""
+    repos, errors = [], []
+    try:
+        text = Path(path).expanduser().read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return {"repos": repos, "errors": [f"{path}: not UTF-8"]}
+    except OSError:
+        return {"repos": repos, "errors": errors}
+    for line in text.splitlines():
+        m = REPO_LINE_RE.match(line)
+        if not m:
+            continue
+        raw = m.group(1)
+        where = Path(raw).expanduser()
+        if not where.is_absolute():
+            errors.append(f"{raw}: not an absolute path")
+            continue
+        resolved = str(where.resolve())
+        if resolved not in repos:
+            repos.append(resolved)
+    return {"repos": repos, "errors": errors}
+
+
+def portfolio_row(path, data=None):
+    """One repository's row: the plan its board would open, its counts and its metrics."""
+    root = Path(path).expanduser().resolve()
+    row = {"key": repo_key(root), "name": root.name, "path": str(root), "plan": None, "title": "", "open": False,
+           "done": None, "tasks": None, "running": None, "review": None, "lead": None, "load_bearing": None,
+           "sources": None, "error": None}
+    if not root.is_dir():
+        row["error"] = "not found"
+        return row
+    board = load_board(root, None, data)
+    summary = board["summary"]
+    statuses = [t["status"] for t in board["tasks"]]
+    row.update(plan=board["plan"], title=board["title"], open=bool(board["plan"]) and summary["done"] < summary["tasks"],
+               done=summary["done"], tasks=summary["tasks"],
+               running=statuses.count("in_progress") + statuses.count("review"), review=statuses.count("review"),
+               lead=summary["lead"], load_bearing=summary["load_bearing"], sources=board["sources"])
+    return row
+
+
+def load_portfolio(repos_file, data=None):
+    """The JSON the portfolio page renders: one row per listed repository, the file's errors and totals."""
+    file = Path(repos_file).expanduser().resolve()
+    found = read_repos(file)
+    rows = [portfolio_row(p, (data or {}).get(p)) for p in found["repos"]]
+    totals = {"repos": len(rows), "open": sum(r["open"] for r in rows),
+              "running": sum(r["running"] or 0 for r in rows),
+              "load_bearing": sum(r["load_bearing"] or 0 for r in rows)}
+    return {"file": str(file), "rows": rows, "errors": found["errors"], "totals": totals}
+
+
+class Portfolio:
+    """Rereads the repos file and keeps one Live poller per listed folder; wakes every stream when either changes."""
+
+    def __init__(self, repos_file, every=1.0, **live_opts):
+        self.file = Path(repos_file).expanduser().resolve()
+        self.every = every
+        self.live_opts = {"plan_every": 2.0, "git_every": 10.0, "prs_every": 60.0, **live_opts}
+        self.lives = {}
+        self.version = 0
+        self.stopped = False
+        self.cond = threading.Condition()
+        self._lock = threading.Lock()
+        self._seen = None
+        self._halt = threading.Event()
+        self._thread = None
+
+    def start(self):
+        """Register a poller per listed folder now; their first git and PR reads run in the background thread."""
+        if self._thread is None:
+            self.poll(start_lives=False)
+            self._thread = threading.Thread(target=self._loop, daemon=True)
+            self._thread.start()
+        return self
+
+    def stop(self):
+        self._halt.set()
+        with self._lock:
+            for live in self.lives.values():
+                live.stop()
+        with self.cond:
+            self.stopped = True
+            self.cond.notify_all()
+
+    def wait(self, version, timeout):
+        """The current version, once it differs from `version`, the portfolio stops, or `timeout` passes."""
+        with self.cond:
+            self.cond.wait_for(lambda: self.version != version or self.stopped, timeout)
+            return self.version
+
+    def live(self, key):
+        """The poller of the listed repository whose key is `key`, or None."""
+        with self._lock:
+            return next((live for path, live in self.lives.items() if repo_key(path) == key), None)
+
+    def data(self):
+        with self._lock:
+            return {path: live.data for path, live in self.lives.items()}
+
+    def snapshot(self):
+        return load_portfolio(self.file, self.data())
+
+    def _loop(self):
+        self.poll()
+        while not self._halt.wait(self.every):
+            self.poll()
+
+    def poll(self, start_lives=True):
+        """Match the pollers to the listed folders; git runs outside the lock, so requests never wait on it."""
+        found = read_repos(self.file)
+        folders = [p for p in found["repos"] if Path(p).is_dir()]
+        try:
+            raw = zlib.crc32(self.file.read_bytes())
+        except OSError:
+            raw = None
+        with self._lock:
+            if self._halt.is_set():
+                return
+            gone = [self.lives.pop(p) for p in list(self.lives) if p not in folders]
+            for path in folders:
+                if path not in self.lives:
+                    self.lives[path] = Live(path, **self.live_opts)
+            waiting = [live for live in self.lives.values() if live._thread is None]
+        for live in gone:
+            live.stop()
+        if start_lives:
+            for live in waiting:
+                if not self._halt.is_set():
+                    live.start()
+        with self._lock:
+            seen = (raw, tuple(found["repos"]), tuple(folders),
+                    tuple((p, live.version) for p, live in self.lives.items()))
+        if seen != self._seen:
+            self._seen = seen
+            with self.cond:
+                self.version += 1
+                self.cond.notify_all()
+
+
+NESTED_RE = re.compile(r"^/r/([0-9a-f]{8})(/.*)?$")
+
+
+def make_portfolio_server(repos_file, port, verbose=False, portfolio=None):
+    folio = portfolio or Portfolio(repos_file)
+
+    class PortfolioHandler(Handler):
+        def do_GET(self):
+            url = urlparse(self.path)
+            plan = parse_qs(url.query).get("plan", [None])[0]
+            if url.path == "/healthz":
+                return self._json({"root": str(folio.file), "api": API, "portfolio": True})
+            if url.path == "/api/portfolio":
+                return self._json(folio.snapshot())
+            if url.path == "/api/events":
+                return self._events(folio, folio.snapshot, "portfolio")
+            if url.path == "/":
+                return self._send(200, "text/html; charset=utf-8", PORTFOLIO_PAGE.encode("utf-8"))
+            m = NESTED_RE.match(url.path)
+            live = folio.live(m.group(1)) if m else None
+            if live is None:
+                return self._not_found()
+            rest = m.group(2)
+            if rest is None:
+                return self._send(301, "text/plain; charset=utf-8", b"", {"Location": url.path + "/"})
+            if rest == "/":
+                return self._send(200, "text/html; charset=utf-8", PAGE.encode("utf-8"))
+            if rest == "/api/board":
+                return self._json(load_board(live.root, plan, live.data))
+            if rest == "/api/events":
+                return self._events(live, lambda: load_board(live.root, plan, live.data), "board")
+            self._not_found()
+
+    PortfolioHandler.verbose = verbose
+    server = Server(port, PortfolioHandler, folio)
+    server.portfolio = folio.start()
     return server
 
 
@@ -1160,20 +1577,31 @@ def healthz(port):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Serve a live, read-only board of docs/superpowers/plans.")
+    ap = argparse.ArgumentParser(description="Serve a live, read-only board of docs/superpowers/plans, "
+                                             "or with --portfolio one page across the repositories in a repos file.")
     ap.add_argument("--root", default=".", help="repository root (default: current directory)")
-    ap.add_argument("--port", type=int, help="port on 127.0.0.1 (default: derived from the root path)")
+    ap.add_argument("--port", type=int, help="port on 127.0.0.1 (default: derived from the root path; "
+                                             f"{PORTFOLIO_PORT} with --portfolio)")
+    ap.add_argument("--portfolio", action="store_true", help="serve the portfolio of every repository in the repos file")
+    ap.add_argument("--repos", default=str(REPOS_FILE), help=f"the repos file for --portfolio (default: {REPOS_FILE})")
     ap.add_argument("--verbose", action="store_true", help="log one line per request to stderr")
-    ap.add_argument("--watch-pid", type=int, help="stop when this process ends (the session that started the board)")
+    ap.add_argument("--watch-pid", type=int, help="stop when this process ends (the session that started the server)")
     args = ap.parse_args(argv)
-    root = Path(args.root).resolve()
-    if not root.is_dir():
-        print(f"root is not a directory: {args.root}", file=sys.stderr)
-        return 2
-    port = args.port or port_for(root)
+    if args.portfolio:
+        root = Path(args.repos).expanduser().resolve()
+        port = args.port or PORTFOLIO_PORT
+    else:
+        root = Path(args.root).resolve()
+        if not root.is_dir():
+            print(f"root is not a directory: {args.root}", file=sys.stderr)
+            return 2
+        port = args.port or port_for(root)
     url = f"http://127.0.0.1:{port}/"
     try:
-        server = make_server(root, port, args.verbose)
+        if args.portfolio:
+            server = make_portfolio_server(root, port, args.verbose)
+        else:
+            server = make_server(root, port, args.verbose)
     except OSError:
         if healthz(port) == str(root):
             print(url, flush=True)

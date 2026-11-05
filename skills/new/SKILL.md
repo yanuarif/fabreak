@@ -26,12 +26,12 @@ An empty or nearly empty repo; a product shaped from scratch. State: no `CONTEXT
 3. superpowers:brainstorming, narrowed to what grilling settled: the design is approved section by section and written to `docs/superpowers/specs/<date>-<topic>-design.md`, committed by brainstorming itself; fabreak's step 4 follows. Its input carries step 2's result: the template's files are the structure the design starts from, the profile's Commands, Structure and Decisions are the defaults every approach starts from, and its Gotchas are constraints; the owner may override any of them. With candidate profiles, each approach names the profile it builds on, and the picked approach's profile applies from the next section on. The design step: once the owner picks an approach and before the spec is written, `design.md`, next to the router, runs when the product has screens; done when the owner approved the canvas and the spec has a Screens section with its URL and artboards. An open question with a factual answer goes to mattpocock-skills:research (findings to `docs/research/`); a question only code answers goes to the `spike` entry.
 4. mattpocock-skills:domain-modeling on the spec: every term the spec uses lands in `CONTEXT.md`; every decision that had alternatives lands in `docs/adr/`.
 5. superpowers:writing-plans from the spec: `docs/superpowers/plans/<date>-<topic>.md`, small tasks, each naming the tasks it depends on and the seams it tests at; a task that builds or changes a screen also names the canvas URL and its artboards from the Screens section.
-6. The `bootstrap` entry, for the first repo only.
+6. Portfolio and bootstrap: add this repository to `~/.claude/fabreak/repos.md` with the commands in `bootstrap` step 6, for every repo of the product, then the `bootstrap` entry, for the first repo only. Done when `repos.md` lists the repository and, for the first repo, bootstrap is done.
 7. board.md: the card round, then one card per task.
 
 ## Artifacts
 
-The template commit when one was picked, the spec (with its Stack section, and its Screens section and canvas when the product has screens), `CONTEXT.md`, `docs/adr/`, the plan, and bootstrap's files.
+The template commit when one was picked, the spec (with its Stack section, and its Screens section and canvas when the product has screens), `CONTEXT.md`, `docs/adr/`, the plan, bootstrap's files, and the repository's line in `~/.claude/fabreak/repos.md`.
 
 ## Stop asking when
 

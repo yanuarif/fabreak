@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, started from the owner's template repo and stack profile when one fits, lane B for a legacy takeover; screens are approved on a Claude Design canvas before the spec; after a card round every plan task becomes its own session, run or held, then loop C: worktree, implement, verify with a dependency audit, review on Standards, Spec and Security, finish; the live plan board shows steps, metrics, worktrees and PRs; then PR or MR, merge without a question when the gates hold, tick with a metrics line, release with a stack profile for the next new product, closing; triage turns red CI, open issues and an intake hook into cards, on a weekday schedule; back edges for review findings, replan and hotfix.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1150" width="1240" height="1150" role="img" aria-label="fabreak Agentic Development Lifecycle: a router on top chooses an entry; lane A for a new product, started from the owner's template repo and stack profile when one fits, lane B for a legacy takeover; screens are approved on a Claude Design canvas before the spec; after a card round every plan task becomes its own session, run or held, then loop C: worktree, implement, verify with a dependency audit, review on Standards, Spec and Security, finish; the live plan board shows steps, metrics, worktrees and PRs, and the portfolio page shows a row per repository that opens its board; then PR or MR, merge without a question when the gates hold, tick with a metrics line, release with a stack profile for the next new product, closing; triage turns red CI, open issues and an intake hook into cards, on a weekday schedule; back edges for review findings, replan and hotfix.">
   <style>
     .n rect { fill: #ffffff; stroke-width: 1.6; }
     .sp rect { stroke: #0f766e; } .mp rect { stroke: #b45309; } .an rect { stroke: #6d28d9; }
@@ -95,6 +95,11 @@
   <line class="ln" x1="190" y1="680" x2="190" y2="746" marker-end="url(#a)"/><text class="lbl" x="200" y="738">card started = linked session</text>
   <polyline class="ln back" points="90,648 40,648 40,432 78,432" marker-end="url(#am)"/>
   <text class="lbl" transform="rotate(-90 34 560)" x="34" y="560" text-anchor="middle">replan: spec changed, remaining tasks rewritten</text>
+
+  <!-- Portfolio -->
+  <g class="n tl"><rect x="930" y="520" width="250" height="68" rx="4"/><text class="t" x="1055" y="546" text-anchor="middle">portfolio</text><text class="d" x="1055" y="563" text-anchor="middle">/fabreak:portfolio: a row per repo</text><text class="d" x="1055" y="578" text-anchor="middle">plan, Done, running, lead, load-bearing</text><text class="b" x="1172" y="532" text-anchor="end">app pane</text></g>
+  <line class="ln soft" x1="1055" y1="588" x2="1055" y2="610" marker-end="url(#a)"/>
+  <text class="lbl" x="1063" y="603">a row opens its board</text>
 
   <!-- Plan board -->
   <g class="n tl"><rect x="930" y="612" width="250" height="68" rx="4"/><text class="t" x="1055" y="638" text-anchor="middle">plan board</text><text class="d" x="1055" y="655" text-anchor="middle">/fabreak:board: live, read-only kanban</text><text class="d" x="1055" y="670" text-anchor="middle">steps, metrics, worktrees, PRs</text><text class="b" x="1172" y="624" text-anchor="end">app pane</text></g>

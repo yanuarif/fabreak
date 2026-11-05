@@ -53,6 +53,7 @@ Every development request starts with /fabreak
 | `/fabreak:closing` | handover to a client: e2e evidence, the client's UAT sign-off, access |
 | `/fabreak:triage` | open issues, a red default branch or a repository's intake hook to sort into cards |
 | `/fabreak:board` | open the live, read-only plan board in the preview pane |
+| `/fabreak:portfolio` | open the live, read-only portfolio of every repository in the preview pane |
 
 Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming; `/fabreak:fix --release` lands the fix on the release branch first, then backports it.
 
@@ -91,9 +92,24 @@ Flags: `/fabreak:feature --grill` runs a grilling interview before brainstorming
 - Changes reach the page over Server-Sent Events. A card opens its details: dependencies, branch, worktree, PR and the task's plan text. The page has search (`/`), column filters, keyboard navigation, a plan picker when there are several plans, and an activity log.
 - The server listens on 127.0.0.1 only, on a port derived from the repository path, and writes nothing. It stops when the session that started it ends, or from the page's Stop button.
 
+## Portfolio
+
+`/fabreak:portfolio` starts `scripts/plan-board.py --portfolio` and opens one page across your repositories in the preview pane, a row each: the plan its board would open, Done/total, running cards (In progress or Review), median lead and load-bearing findings. A row opens that repository's board, served by the same process, with a link back.
+
+The list is `~/.claude/fabreak/repos.md`, one `- /path/to/repo` line per repository; other lines are ignored.
+
+```markdown
+# Repositories
+
+- /work/todo-api
+- /work/invoicing-app
+```
+
+`/fabreak:bootstrap` and `/fabreak:new` add the repository they set up. A repository set up before 0.9.0 gets its line from you, or from running `/fabreak:bootstrap` again, which fills only what is missing. The server listens on 127.0.0.1:7900, polls each repository more slowly than a board does (plans every 2 s, git every 10 s, PRs every minute), writes nothing, and stops with the session that started it or from the page's Stop button.
+
 ## Stack templates
 
-Two files in your own folder, `~/.claude/fabreak/`, carry what one product teaches the next. fabreak ships no templates; both files stay out of every repository.
+Two files in your own folder, `~/.claude/fabreak/`, carry what one product teaches the next. fabreak ships no templates; both files stay out of every repository, as `repos.md` does.
 
 - `templates.md`, written by you: one table row per template repo you own.
 
@@ -119,7 +135,8 @@ skills/fabreak/design.md     the design step: screens on a Claude Design canvas,
 skills/fabreak/hosting.md    GitHub, GitLab, Bitbucket: PR or MR, CI status, merge, protection
 skills/triage/SKILL.md       the /fabreak:triage entry: issues, red CI and the intake hook sorted into cards; its log is docs/superpowers/triage.md
 skills/board/SKILL.md        the /fabreak:board command: starts the plan board and opens it in the preview pane
-scripts/plan-board.py        the plan board server: plan ticks, metrics, worktrees and PRs pushed live to one read-only page, 127.0.0.1
+skills/portfolio/SKILL.md    the /fabreak:portfolio command: starts the portfolio and opens it in the preview pane
+scripts/plan-board.py        the plan board server: plan ticks, metrics, worktrees and PRs pushed live to one read-only page, 127.0.0.1; --portfolio serves a row per repository
 tests/                       fixtures for dry runs, shell tests, plan board unit tests
 scripts/task-worktree.sh     router state check 4: is this checkout a task worktree
 ```
@@ -127,7 +144,7 @@ scripts/task-worktree.sh     router state check 4: is this checkout a task workt
 ## Limits
 
 - fabreak creates no sidebar sections and moves no sessions: per-card state is on the card's row, in the plan and on the plan board. The board is read-only; in the terminal CLI, fabreak prints it as text from the plan and `git worktree list`.
-- The plan board reads PR state from GitHub only; on GitLab and Bitbucket its columns come from steps and worktrees.
+- The plan board and the portfolio read PR state from GitHub only; on GitLab and Bitbucket their columns and counts come from steps and worktrees.
 - Scheduled triage needs the desktop app: `bootstrap` offers a weekday `/fabreak:triage` as one of the app's scheduled tasks, which runs while the app is open. A scheduled run stops at the triage table; cards start only on the owner's answer. Without the app, triage is run by hand.
 - CI is optional. `bootstrap` asks whether to write a CI workflow; without CI, the local suite run's summary lines and exit codes stand in for CI green and go in the PR or MR body.
 - The PR monitor that wakes a session on review comments, and Auto-fix, exist only for GitHub. On GitLab the session uses `glab`; on Bitbucket it uses the REST API or prints manual steps, and checks CI status itself.
