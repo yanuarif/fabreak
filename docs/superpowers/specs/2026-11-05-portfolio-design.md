@@ -29,9 +29,9 @@ The common git folder's parent is the main checkout, also when the entry runs in
 
 ## Server: `plan-board.py --portfolio`
 
-`--portfolio` serves the portfolio instead of one board; `--repos FILE` overrides `~/.claude/fabreak/repos.md`; `--port` and `--watch-pid` work as for a board. The default port is 7900, outside the boards' 7800–7899. `/healthz` reports `{"root": "<repos file>", "api": 5, "portfolio": true}`, so a second start on a busy port finds the running server the same way a board does. A missing repos file is an empty list, not an error: the page explains how to fill it.
+`--portfolio` serves the portfolio instead of one board; `--repos FILE` overrides `~/.claude/fabreak/repos.md`; `--port` and `--watch-pid` work as for a board. The default port is 7900, outside the boards' 7800–7899. `/healthz` reports `{"root": "<repos file>", "api": 5, "portfolio": true}`, so a second start on a busy port finds the running server the same way a board does. A missing repos file is an empty list, and the page explains how to fill it.
 
-One `Live` poller per listed repository, created when the path appears in the file and stopped when it leaves, on slower intervals than a board's (plans 2 s, git 10 s, PRs 60 s). A portfolio poller rereads `repos.md` every second and bumps its version when the file or any repository's poller changes, so the page's event stream pushes a new snapshot on every change, as a board's does.
+One `Live` poller per listed folder, created when the folder appears in the file and stopped when it leaves the file or stops being a folder; its git reads run outside the portfolio's lock, so a request never waits on them. Pollers run on slower intervals than a board's (plans 2 s, git 10 s, PRs 60 s). A portfolio poller rereads `repos.md` every second and bumps its version when the file or any repository's poller changes, so the page's event stream pushes a new snapshot on every change, as a board's does.
 
 ### Rows
 
@@ -41,7 +41,7 @@ One `Live` poller per listed repository, created when the path appears in the fi
 |---|---|
 | `key` | 8 hex digits of the path's CRC-32, stable while the file changes |
 | `name`, `path` | the folder name and the resolved path |
-| `plan`, `title` | the chosen plan's file and title; `null` without a plan |
+| `plan`, `title` | the chosen plan's file and title; `null` and `""` without a plan |
 | `open` | a plan is chosen and not every task is Done |
 | `done`, `tasks` | `summary.done`, `summary.tasks` |
 | `running` | tasks In progress or in Review: cards in flight |
@@ -51,7 +51,7 @@ One `Live` poller per listed repository, created when the path appears in the fi
 | `sources` | the board's `sources` (git, PRs) |
 | `error` | `"not found"` for a path that is not a folder; every other field is then empty |
 
-`load_portfolio(repos_file, lives)` returns the rows in file order, the file's path, its errors and totals (repositories, open plans, running cards, load-bearing findings).
+`load_portfolio(repos_file, data)`, with each repository's poller data by path, returns the rows in file order, the file's path, its errors and totals (repositories, open plans, running cards, load-bearing findings).
 
 ### Routes
 

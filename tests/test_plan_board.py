@@ -664,6 +664,20 @@ class PortfolioRow(unittest.TestCase):
         self.assertEqual(row["sources"], {"git": False, "prs": True, "default": None})
         self.assertIsNone(row["error"])
 
+    def test_a_worktree_one_commit_ahead_is_running(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = plans_repo(Path(tmp) / "repo")
+            git(repo, "init", "-q", "-b", "main")
+            git(repo, "add", ".")
+            git(repo, "commit", "-q", "-m", "plan")
+            wt = Path(tmp) / "wt"
+            git(repo, "worktree", "add", "-q", "-b", "feat/02-short-a1b2c3", str(wt))
+            (wt / "two.txt").write_text("2\n", encoding="utf-8")
+            git(wt, "add", ".")
+            git(wt, "commit", "-q", "-m", "two")
+            row = pb.portfolio_row(repo, {"git": pb.read_git(repo), "prs": None})
+        self.assertEqual((row["done"], row["tasks"], row["running"], row["review"]), (0, 2, 1, 0))
+
     def test_all_done_is_not_open(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = plans_repo(tmp, PLAN_TEXT.replace("- [ ]", "- [x]"))
@@ -714,6 +728,15 @@ def read_data(stream, name):
             data.append(line[6:])
         elif line == "" and event == name and data:
             return json.loads("\n".join(data))
+
+
+def read_until(stream, ok, limit=20):
+    """The first portfolio event for which ok(snapshot) holds; a write seen half done may come first."""
+    for _ in range(limit):
+        snap = read_data(stream, "portfolio")
+        if ok(snap):
+            return snap
+    raise AssertionError("no matching portfolio event")
 
 
 class PortfolioServer(unittest.TestCase):
@@ -775,11 +798,30 @@ class PortfolioServer(unittest.TestCase):
         stream = urlopen(self.base + "/api/events", timeout=5)
         self.assertEqual(len(read_data(stream, "portfolio")["rows"]), 1)
         self.repos.write_text(f"- {self.repo}\n- {self.other}\n", encoding="utf-8")
-        self.assertEqual(len(read_data(stream, "portfolio")["rows"]), 2)
+        read_until(stream, lambda snap: len(snap["rows"]) == 2)
         plan = self.other / "docs" / "superpowers" / "plans" / "2026-10-21-demo.md"
         plan.write_text(PLAN_TEXT.replace("- [ ] one", "- [x] one"), encoding="utf-8")
-        self.assertEqual(read_data(stream, "portfolio")["rows"][1]["done"], 1)
+        read_until(stream, lambda snap: len(snap["rows"]) == 2 and snap["rows"][1]["done"] == 1)
         stream.close()
+
+    def test_a_deleted_folder_drops_its_board(self):
+        import shutil
+        import time
+        key = pb.repo_key(str(self.repo))
+        self.get(f"/r/{key}/api/board")
+        shutil.rmtree(self.repo)
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline:
+            try:
+                self.get(f"/r/{key}/api/board")
+            except HTTPError as e:
+                self.assertEqual(e.code, 404)
+                break
+            time.sleep(0.05)
+        else:
+            self.fail("the board route stayed after its folder was deleted")
+        _, body = self.get("/api/portfolio")
+        self.assertEqual(json.loads(body)["rows"][0]["error"], "not found")
 
     def test_stop_ends_the_stream(self):
         stream = urlopen(self.base + "/api/events", timeout=5)
@@ -791,7 +833,7 @@ class PortfolioServer(unittest.TestCase):
 
 
 class PortfolioMain(unittest.TestCase):
-    def test_portfolio_port_is_outside_the_board_range(self):
+    def test_default_port_is_past_the_board_ports(self):
         self.assertEqual(pb.PORTFOLIO_PORT, 7900)
 
 

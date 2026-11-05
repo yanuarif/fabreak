@@ -1440,8 +1440,9 @@ class Portfolio:
         self._thread = None
 
     def start(self):
+        """Register a poller per listed folder now; their first git and PR reads run in the background thread."""
         if self._thread is None:
-            self.poll()
+            self.poll(start_lives=False)
             self._thread = threading.Thread(target=self._loop, daemon=True)
             self._thread.start()
         return self
@@ -1474,11 +1475,14 @@ class Portfolio:
         return load_portfolio(self.file, self.data())
 
     def _loop(self):
+        self.poll()
         while not self._halt.wait(self.every):
             self.poll()
 
-    def poll(self):
+    def poll(self, start_lives=True):
+        """Match the pollers to the listed folders; git runs outside the lock, so requests never wait on it."""
         found = read_repos(self.file)
+        folders = [p for p in found["repos"] if Path(p).is_dir()]
         try:
             raw = zlib.crc32(self.file.read_bytes())
         except OSError:
@@ -1486,12 +1490,19 @@ class Portfolio:
         with self._lock:
             if self._halt.is_set():
                 return
-            for path in [p for p in self.lives if p not in found["repos"]]:
-                self.lives.pop(path).stop()
-            for path in found["repos"]:
-                if path not in self.lives and Path(path).is_dir():
-                    self.lives[path] = Live(path, **self.live_opts).start()
-            seen = (raw, tuple(found["repos"]), tuple(Path(p).is_dir() for p in found["repos"]),
+            gone = [self.lives.pop(p) for p in list(self.lives) if p not in folders]
+            for path in folders:
+                if path not in self.lives:
+                    self.lives[path] = Live(path, **self.live_opts)
+            waiting = [live for live in self.lives.values() if live._thread is None]
+        for live in gone:
+            live.stop()
+        if start_lives:
+            for live in waiting:
+                if not self._halt.is_set():
+                    live.start()
+        with self._lock:
+            seen = (raw, tuple(found["repos"]), tuple(folders),
                     tuple((p, live.version) for p, live in self.lives.items()))
         if seen != self._seen:
             self._seen = seen
