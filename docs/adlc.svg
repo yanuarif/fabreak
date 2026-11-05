@@ -44,31 +44,33 @@
   <text class="lane" x="90" y="720">C. Build loop per session, the same for every entry</text>
 
   <!-- Lane A -->
-  <g class="n mp"><rect x="80" y="140" width="220" height="56" rx="4"/><text class="t" x="190" y="163" text-anchor="middle">grilling</text><text class="d" x="190" y="181" text-anchor="middle">interview until the decision tree is empty</text><text class="b" x="292" y="152" text-anchor="end">MP</text></g>
+  <g class="n mp"><rect x="80" y="140" width="220" height="44" rx="4"/><text class="t" x="190" y="158" text-anchor="middle">grilling</text><text class="d" x="190" y="174" text-anchor="middle">interview until the decision tree is empty</text><text class="b" x="292" y="152" text-anchor="end">MP</text></g>
   <g class="tag"><rect x="88" y="133" width="30" height="14" rx="3"/><text x="93" y="143">new</text></g>
-  <g class="n sp"><rect x="80" y="228" width="220" height="56" rx="4"/><text class="t" x="190" y="251" text-anchor="middle">brainstorming</text><text class="d" x="190" y="269" text-anchor="middle">spec approved section by section</text><text class="b" x="292" y="240" text-anchor="end">SP</text></g>
-  <g class="tag"><rect x="88" y="221" width="48" height="14" rx="3"/><text x="93" y="231">feature</text></g>
-  <g class="n mp"><rect x="80" y="316" width="220" height="56" rx="4"/><text class="t" x="190" y="339" text-anchor="middle">domain-modeling</text><text class="d" x="190" y="357" text-anchor="middle">CONTEXT.md, docs/adr</text><text class="b" x="292" y="328" text-anchor="end">MP</text></g>
-  <g class="n sp"><rect x="80" y="404" width="220" height="56" rx="4"/><text class="t" x="190" y="427" text-anchor="middle">writing-plans</text><text class="d" x="190" y="445" text-anchor="middle">small tasks with dependencies</text><text class="b" x="292" y="416" text-anchor="end">SP</text></g>
-  <g class="tag"><rect x="88" y="397" width="44" height="14" rx="3"/><text x="93" y="407">replan</text></g>
-  <g class="n tl"><rect x="80" y="492" width="220" height="56" rx="4"/><text class="t" x="190" y="515" text-anchor="middle">bootstrap repo</text><text class="d" x="190" y="533" text-anchor="middle">CLAUDE.md, pre-commit, CI if wanted; wizard</text><text class="b" x="292" y="504" text-anchor="end">tools</text></g>
-  <g class="tag"><rect x="88" y="485" width="60" height="14" rx="3"/><text x="93" y="495">bootstrap</text></g>
-  <g class="n tl"><rect x="370" y="150" width="220" height="56" rx="4"/><text class="t" x="480" y="173" text-anchor="middle">design canvas</text><text class="d" x="480" y="191" text-anchor="middle">Claude Design: screens approved first</text><text class="b" x="582" y="162" text-anchor="end">app</text></g>
-  <polyline class="ln" points="302,242 330,242 330,178 368,178" marker-start="url(#a)" marker-end="url(#a)"/>
-  <text class="lbl" x="326" y="214" text-anchor="end">screens</text>
-  <g class="n mp"><rect x="370" y="232" width="220" height="44" rx="4"/><text class="t" x="480" y="250" text-anchor="middle">research</text><text class="d" x="480" y="266" text-anchor="middle">facts from primary sources, into the repo</text><text class="b" x="582" y="244" text-anchor="end">MP</text></g>
-  <g class="n mp"><rect x="370" y="288" width="220" height="44" rx="4"/><text class="t" x="480" y="306" text-anchor="middle">prototype</text><text class="d" x="480" y="322" text-anchor="middle">spike UI: variations as canvas artboards</text><text class="b" x="582" y="300" text-anchor="end">MP</text></g>
-  <g class="n mp"><rect x="370" y="344" width="220" height="44" rx="4"/><text class="t" x="480" y="362" text-anchor="middle">feasibility spike</text><text class="d" x="480" y="378" text-anchor="middle">time-boxed, branch archived, result = ADR</text><text class="b" x="582" y="356" text-anchor="end">MP</text></g>
-  <g class="tag"><rect x="378" y="337" width="36" height="14" rx="3"/><text x="383" y="347">spike</text></g>
-  <line class="ln" x1="190" y1="196" x2="190" y2="226" marker-end="url(#a)"/><text class="lbl" x="200" y="215">agreement</text>
-  <line class="ln" x1="190" y1="284" x2="190" y2="314" marker-end="url(#a)"/><text class="lbl" x="200" y="303">spec</text>
-  <line class="ln" x1="190" y1="372" x2="190" y2="402" marker-end="url(#a)"/><text class="lbl" x="200" y="391">terms settled</text>
-  <line class="ln" x1="190" y1="460" x2="190" y2="490" marker-end="url(#a)"/><text class="lbl" x="200" y="479">first repo only</text>
-  <polyline class="ln" points="300,344 340,344 340,254 368,254" marker-end="url(#a)"/>
-  <polyline class="ln" points="340,310 368,310" marker-end="url(#a)"/>
-  <polyline class="ln" points="340,344 340,366 368,366" marker-end="url(#a)"/>
-  <text class="lbl" x="344" y="226">when a question stays open</text>
-  <line class="ln" x1="190" y1="548" x2="190" y2="610" marker-end="url(#a)"/><text class="lbl" x="200" y="578">card round: permissions, start now?</text><text class="lbl" x="200" y="594">then every plan task is a card at once</text>
+  <g class="n tl"><rect x="80" y="216" width="220" height="44" rx="4"/><text class="t" x="190" y="234" text-anchor="middle">stack start</text><text class="d" x="190" y="250" text-anchor="middle">owner's template copied, profile read</text><text class="b" x="292" y="228" text-anchor="end">tools</text></g>
+  <g class="n sp"><rect x="80" y="292" width="220" height="44" rx="4"/><text class="t" x="190" y="310" text-anchor="middle">brainstorming</text><text class="d" x="190" y="326" text-anchor="middle">spec approved section by section</text><text class="b" x="292" y="304" text-anchor="end">SP</text></g>
+  <g class="tag"><rect x="88" y="285" width="48" height="14" rx="3"/><text x="93" y="295">feature</text></g>
+  <g class="n mp"><rect x="80" y="368" width="220" height="44" rx="4"/><text class="t" x="190" y="386" text-anchor="middle">domain-modeling</text><text class="d" x="190" y="402" text-anchor="middle">CONTEXT.md, docs/adr</text><text class="b" x="292" y="380" text-anchor="end">MP</text></g>
+  <g class="n sp"><rect x="80" y="444" width="220" height="44" rx="4"/><text class="t" x="190" y="462" text-anchor="middle">writing-plans</text><text class="d" x="190" y="478" text-anchor="middle">small tasks with dependencies</text><text class="b" x="292" y="456" text-anchor="end">SP</text></g>
+  <g class="tag"><rect x="88" y="437" width="44" height="14" rx="3"/><text x="93" y="447">replan</text></g>
+  <g class="n tl"><rect x="80" y="520" width="220" height="44" rx="4"/><text class="t" x="190" y="538" text-anchor="middle">bootstrap repo</text><text class="d" x="190" y="554" text-anchor="middle">CLAUDE.md, pre-commit, CI if wanted; wizard</text><text class="b" x="292" y="532" text-anchor="end">tools</text></g>
+  <g class="tag"><rect x="88" y="513" width="60" height="14" rx="3"/><text x="93" y="523">bootstrap</text></g>
+  <g class="n tl"><rect x="370" y="222" width="220" height="56" rx="4"/><text class="t" x="480" y="245" text-anchor="middle">design canvas</text><text class="d" x="480" y="263" text-anchor="middle">Claude Design: screens approved first</text><text class="b" x="582" y="234" text-anchor="end">app</text></g>
+  <polyline class="ln" points="302,314 330,314 330,250 368,250" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text class="lbl" x="326" y="279" text-anchor="end">screens</text>
+  <g class="n mp"><rect x="370" y="304" width="220" height="44" rx="4"/><text class="t" x="480" y="322" text-anchor="middle">research</text><text class="d" x="480" y="338" text-anchor="middle">facts from primary sources, into the repo</text><text class="b" x="582" y="316" text-anchor="end">MP</text></g>
+  <g class="n mp"><rect x="370" y="360" width="220" height="44" rx="4"/><text class="t" x="480" y="378" text-anchor="middle">prototype</text><text class="d" x="480" y="394" text-anchor="middle">spike UI: variations as canvas artboards</text><text class="b" x="582" y="372" text-anchor="end">MP</text></g>
+  <g class="n mp"><rect x="370" y="416" width="220" height="44" rx="4"/><text class="t" x="480" y="434" text-anchor="middle">feasibility spike</text><text class="d" x="480" y="450" text-anchor="middle">time-boxed, branch archived, result = ADR</text><text class="b" x="582" y="428" text-anchor="end">MP</text></g>
+  <g class="tag"><rect x="378" y="409" width="36" height="14" rx="3"/><text x="383" y="419">spike</text></g>
+  <line class="ln" x1="190" y1="184" x2="190" y2="214" marker-end="url(#a)"/><text class="lbl" x="200" y="203">agreement</text>
+  <line class="ln" x1="190" y1="260" x2="190" y2="290" marker-end="url(#a)"/><text class="lbl" x="200" y="279">template, profile</text>
+  <line class="ln" x1="190" y1="336" x2="190" y2="366" marker-end="url(#a)"/><text class="lbl" x="200" y="355">spec</text>
+  <line class="ln" x1="190" y1="412" x2="190" y2="442" marker-end="url(#a)"/><text class="lbl" x="200" y="431">terms settled</text>
+  <line class="ln" x1="190" y1="488" x2="190" y2="518" marker-end="url(#a)"/><text class="lbl" x="200" y="507">first repo only</text>
+  <polyline class="ln" points="300,390 340,390 340,326 368,326" marker-end="url(#a)"/>
+  <polyline class="ln" points="340,382 368,382" marker-end="url(#a)"/>
+  <polyline class="ln" points="340,390 340,438 368,438" marker-end="url(#a)"/>
+  <text class="lbl" x="344" y="298">when a question stays open</text>
+  <line class="ln" x1="190" y1="564" x2="190" y2="610" marker-end="url(#a)"/><text class="lbl" x="200" y="581">card round: permissions, start now?</text><text class="lbl" x="200" y="597">then every plan task is a card at once</text>
 
   <!-- Lane B -->
   <g class="n mp"><rect x="660" y="140" width="220" height="56" rx="4"/><text class="t" x="770" y="163" text-anchor="middle">research</text><text class="d" x="770" y="181" text-anchor="middle">code map; the code is the primary source</text><text class="b" x="872" y="152" text-anchor="end">MP</text></g>
@@ -93,7 +95,7 @@
   <!-- Convergence -->
   <g class="n tl"><rect x="90" y="612" width="200" height="68" rx="4"/><text class="t" x="190" y="638" text-anchor="middle">One session per task</text><text class="d" x="190" y="655" text-anchor="middle">run or held; at most three run at once</text><text class="d" x="190" y="670" text-anchor="middle">model tier picked per task</text><text class="b" x="282" y="624" text-anchor="end">Claude Code</text></g>
   <line class="ln" x1="190" y1="680" x2="190" y2="746" marker-end="url(#a)"/><text class="lbl" x="200" y="738">card started = linked session</text>
-  <polyline class="ln back" points="90,648 40,648 40,432 78,432" marker-end="url(#am)"/>
+  <polyline class="ln back" points="90,648 40,648 40,466 78,466" marker-end="url(#am)"/>
   <text class="lbl" transform="rotate(-90 34 560)" x="34" y="560" text-anchor="middle">replan: spec changed, remaining tasks rewritten</text>
 
   <!-- Portfolio -->
