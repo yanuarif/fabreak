@@ -50,13 +50,15 @@ Four fixed sections, so `new` can read them. A profile holds stack facts only: n
 A new step 2 sits between grilling (step 1) and brainstorming (now step 3).
 
 1. Read `~/.claude/fabreak/templates.md` and list `~/.claude/fabreak/stacks/`. Neither exists: one line, "No templates or stack profiles in ~/.claude/fabreak: starting empty", and the step is done.
-2. Match: compare the stack grilling settled (or, when it settled none, the product grilling described) with each row's `Stack` and `Fits`. A row that fits is a candidate; at most three, the closest first.
+2. Match: compare the stack grilling settled (or, when it settled none, the product grilling described) with each row's `Stack` and `Fits`. A row that fits is a candidate; at most three.
 3. With one or more candidates: one discrete-choice question in the app's question tool, one option per candidate (label: the stack; description: its `Fits` and its URL) plus "Start empty". With none: one line naming the stack and saying no template fits.
 4. A template picked: clone it with `git clone --depth 1` into a new folder from `mktemp -d`, copy every file except `.git` into the repository root, keeping each file the repository already has, then delete the temporary folder. One commit on the default branch, `Start from the <stack> template`, whose body names the URL, the cloned commit and every path kept from the repository. A failed clone is named in one line with git's error, and the step continues as "Start empty".
-5. Profile: the profile whose file name is the picked template's stack, or else the stack grilling settled. When grilling settled no stack, brainstorming's chosen approach settles it, and a matching profile is read before the next brainstorming section.
+5. Profile, with or without a template: the profile whose file name is the picked template's stack, or else the stack grilling settled. When grilling settled no stack, every profile goes to brainstorming as a candidate, and the approach the owner picks names the one that applies.
 6. Brainstorming's input gains what the step found: the template's files are the starting structure the design builds on, a profile's Commands, Structure and Decisions are defaults each approach starts from, and its Gotchas are constraints. The owner can override any of them. The spec gets a `## Stack` section: the template (stack, URL, commit) or "none", and the profile (its name and the lines adopted) or "no profile".
 
-Done when the question was answered (or no candidate was found and said so), the template commit exists when one was picked, and brainstorming has the profile when one matched.
+`release` and `bootstrap` read the earliest spec, by its date prefix, that has a `## Stack` section. A resumed run whose `git log` has a `Start from the` commit skips the question and the copy and goes straight to the profile.
+
+Done when the question was answered (or no candidate was found and said so), the template commit exists when one was picked, and brainstorming has the profile, or the candidate profiles, when any exist.
 
 Routing: after the template commit the repository has source files and no `CONTEXT.md` until domain-modeling, so the router's state rows would pick `takeover`. A `new` run that is resumed in a later session is resumed with `/fabreak:new`, and the router's "Entry named" row wins. The step says so.
 
@@ -64,9 +66,9 @@ Routing: after the template commit the repository has source files and no `CONTE
 
 A new step 5 follows the tag (the hotfix line becomes step 6).
 
-1. Name: the stack named in the `## Stack` section of a spec in `docs/superpowers/specs/`, when the repository started from a template; otherwise a kebab-case name of language, framework and datastore (`python-django-postgres`). An existing profile in `~/.claude/fabreak/stacks/` that names the same stack under another spelling is reused instead of a near duplicate. The name is stated in one line.
+1. Name: the template's stack named in the `## Stack` section, when that section names a template; otherwise a kebab-case name of language, framework and datastore (`python-django-postgres`). An existing profile in `~/.claude/fabreak/stacks/` that names the same stack under another spelling is reused instead of a near duplicate. The name is stated in one line.
 2. Sources read: `CLAUDE.md` (commands, the verification hook, every gotcha or warning line), the repository's top two folder levels from `git ls-files`, and `docs/adr/` (each decision and the alternative it beat).
-3. Write: `mkdir -p ~/.claude/fabreak/stacks`, then the profile in the four sections. An existing profile is merged: its lines stay, a line this repository contradicts is replaced by this repository's, new lines are added, and `Sources:` gains a line. Before writing, each line is checked against the stack-facts rule above; a line that fails is left out.
+3. Write: `mkdir -p ~/.claude/fabreak/stacks`, then the profile in the four sections. An existing profile is merged: its lines stay, a line this repository contradicts is replaced by this repository's, new lines are added, and `Sources:` gains a line, the one place a profile names a repository. Before writing, each line is checked against the stack-facts rule above; a line that fails is left out.
 
 Done when the profile exists with this release's source line, and the name and the number of lines added and replaced are in the release report.
 
