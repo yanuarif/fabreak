@@ -26,4 +26,4 @@ Spec: `docs/superpowers/specs/2026-11-05-stack-templates-design.md`.
 Depends on: Task 1
 
 - [x] **Step 1: README section on stack templates, the chart's release node and feedback label, dry-run entry, version 0.9.0**
-- [ ] **Step 2: The full check list from CONTRIBUTING.md and a fresh review on Standards and Spec**
+- [x] **Step 2: The full check list from CONTRIBUTING.md and a fresh review on Standards and Spec**
